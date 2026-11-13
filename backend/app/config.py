@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import logging
 import os
-import secrets
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -21,13 +20,6 @@ def _env(name: str, default: str | None = None) -> str | None:
 class Settings:
     def __init__(self) -> None:
         self.database_url = _env("DATABASE_URL", f"sqlite:///{BASE_DIR / 'farmstudio.db'}")
-        secret = _env("SECRET_KEY")
-        if not secret:
-            secret = secrets.token_urlsafe(48)
-            log.warning("SECRET_KEY is not set: using a random key, so sign-ins reset on every restart.")
-        self.secret_key = secret
-        self.token_days = int(_env("TOKEN_DAYS", "30"))
-
         # NASA Earthdata Login (used for AppEEARS: SMAP, ECOSTRESS, MODIS)
         self.earthdata_username = _env("EARTHDATA_USERNAME")
         self.earthdata_password = _env("EARTHDATA_PASSWORD")
@@ -56,7 +48,6 @@ class Settings:
             "opentopography_srtm": bool(self.opentopography_api_key),
             "nominatim": True,
             "nominatim_contact_email": bool(self.nominatim_email),
-            "secret_key_set": bool(_env("SECRET_KEY")),
         }
 
 

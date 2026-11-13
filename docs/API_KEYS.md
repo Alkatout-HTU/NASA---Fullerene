@@ -13,7 +13,7 @@ Farm Studio uses seven outside services. Three need something from you; the othe
 | 7 | OpenStreetMap tiles | Street map used to draw the field | No | – |
 | 8 | Esri World Imagery | Satellite photos so farmers can see their field edges | No (see note in step 3) | – |
 
-You also need to make one secret yourself: `SECRET_KEY` (step 0).
+There are no user accounts: each phone or browser keeps its own farms (see "Farm key" in the app's More tab).
 
 ---
 
@@ -22,10 +22,9 @@ You also need to make one secret yourself: `SECRET_KEY` (step 0).
 ```bash
 cd backend
 cp .env.example .env
-python3 -c "import secrets; print(secrets.token_urlsafe(48))"
 ```
 
-Paste the printed string after `SECRET_KEY=` in `backend/.env`.
+On Windows PowerShell use `copy .env.example .env`. Fill in the steps below.
 
 ---
 
@@ -88,7 +87,7 @@ Start the server (see `backend/README.md`), then open http://localhost:8000/api/
 
 ```json
 {"ok": true, "integrations": {"nasa_power": true, "open_meteo": true, "soilgrids": true,
- "earthdata_appeears": true, "opentopography_srtm": true, "nominatim": true, "secret_key_set": true}}
+ "earthdata_appeears": true, "opentopography_srtm": true, "nominatim": true}}
 ```
 
 In the app, **More → Data sources** lists every source with the time it was last fetched and any error.

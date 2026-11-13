@@ -32,11 +32,11 @@ poller runs inside the process. Back up `farmstudio.db`, or set `DATABASE_URL` t
 
 | Feature | Data | Method (`app/agro/…`) |
 |---|---|---|
-| Field squares | The drawn boundary | `geo.py`: about 40 near-square squares over the field; each square's area is the part inside the boundary |
+| Field squares | The drawn boundary, farmer's square size | `geo.py`: grid turned to the field's smallest enclosing rectangle, so squares follow its edges; edge squares are cut at the boundary |
 | Crop suitability and best planting month | NASA POWER 2001–2025 climatology, farmer's water and soil | `climate.py`: FAO ECOCROP temperature ranges, frost days, seasonal irrigation need from Hargreaves ET0 and FAO-56 Kc |
 | Climate trend and “plant drought-tolerant crops” advice | NASA POWER monthly series | Linear trend of annual rain and temperature per decade |
 | Late or early season advice | NASA POWER daily (last 30 days) vs climatology | Temperature anomaly |
-| Watering: drops on squares, “Hold off, rain is coming” | Open-Meteo ET0, rain (92 past + 10 forecast days), deep soil moisture; farmer's logged watering | `water.py`: FAO-56 root-zone water balance per square |
+| Weekly watering plan: when, how much, is the weekly water enough | Open-Meteo ET0 and rain (92 past + 10 forecast days; NASA POWER observations and normals if the forecast is down), farmer's weekly water amount | `water.py` + `services.water_plan`: FAO-56 root-zone balance per square, refill when the crop's safe limit is reached; weekly water shared between crops in proportion to need |
 | Harvest dates | Planting date; NASA POWER + forecast temperatures | `phenology.py`: FAO-56 season lengths, growing degree days for grapes, regional windows for olives, dates and citrus |
 | Safe-spray window | Open-Meteo hourly wind, gusts, rain, temperature, humidity | `spray.py`: label guidance (wind 3–15 km/h, no rain 4 h after, < 30 °C, RH > 40 %) |
 | Frost, heat, heavy rain, wind warnings | Open-Meteo 7-day forecast, SRTM low spots, ECOSTRESS cold spots | `alerts.py` |
@@ -49,17 +49,19 @@ for local varieties before a wide rollout.
 
 ## API overview
 
-All routes except `/api/health`, `/api/crops`, `/api/soils` and `/api/auth/*` need
-`Authorization: Bearer <token>`.
+There are no accounts. Routes that read or change a farmer's farms need an `X-Farm-Key` header:
+a random string (24+ characters) that the app creates on first use and keeps on the device. The
+server stores only its SHA-256 hash; the same key on another device opens the same farms.
 
 | Method | Path | Purpose |
 |---|---|---|
-| POST | `/api/auth/register`, `/api/auth/login` | Create account / sign in → token |
 | GET, PATCH | `/api/me` | Profile, language |
 | POST | `/api/analyze` | Land profile, square size, and a verdict for each crop the farmer typed |
 | GET, POST | `/api/plots` | List / create plots |
 | GET, PATCH, DELETE | `/api/plots/{id}` | Full live state of a plot (squares, water, harvest, weather, alerts) |
-| POST | `/api/plots/{id}/plant` · `/irrigate` · `/wait-rain` · `/harvest` · `/clear` | Farmer actions on squares (harvest only accepts ripe squares) |
+| POST | `/api/plots/{id}/plant` · `/harvest` · `/clear` | Farmer actions on squares (harvest only accepts ripe squares) |
+| POST | `/api/grid/preview` | Squares for a drawn field and square size (map preview) |
+| POST | `/api/plots/{id}/regrid` | Change the square size; crops move to the new squares |
 | POST | `/api/plots/{id}/evaluate` | Judge crops the farmer types for an existing field |
 | GET | `/api/crops/match?text=` | Turn typed crop names (English/Arabic) into crop ids |
 | GET | `/api/geo/search?q=` | Find towns and villages in Jordan (OpenStreetMap Nominatim) |

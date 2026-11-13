@@ -45,7 +45,8 @@ async def _none():
 # ---------------------------------------------------------------- analysis (onboarding step 3)
 async def analyze(lat: float, lon: float, polygon: list[list[float]] | None, area_m2: float, soil_choice: str,
                   farm_type: str, water_m3_week: float, priority: str, prev_crops: list[str],
-                  keep_crops: list[str], lang: str, wanted_text: str = "") -> dict:
+                  keep_crops: list[str], lang: str, wanted_text: str = "", square_w: float | None = None,
+                  square_h: float | None = None) -> dict:
     year = dt.date.today().year
     today = dt.date.today()
     clim_t = power.climatology(lat, lon)
@@ -53,8 +54,12 @@ async def analyze(lat: float, lon: float, polygon: list[list[float]] | None, are
     day_t = power.daily(lat, lon, today - dt.timedelta(days=45), today)
     soil_t = soilgrids.texture_near(lat, lon) if soil_choice == "auto" else _none()
     poly = polygon or geo.square_around(lat, lon, area_m2)
+    try:
+        g = geo.grid(poly, square_w, square_h)
+    except geo.GridError as e:
+        raise InputNeeded("square", str(e))
     (clim, ce), (mon, me), (daily, de), (soil, se), (elevs, slopes, elev_src) = await asyncio.gather(
-        _try(clim_t), _try(mon_t), _try(day_t), _try(soil_t), _try_elev(poly))
+        _try(clim_t), _try(mon_t), _try(day_t), _try(soil_t), _try_elev(g["cells"], poly))
     if clim is None:
         raise UpstreamError("NASA POWER", ce.message if ce else "climatology unavailable")
     clim_v, clim_at = clim
@@ -108,21 +113,18 @@ async def analyze(lat: float, lon: float, polygon: list[list[float]] | None, are
         "trend": tr, "anomaly": anom,
     }
     sources.append(_src("Elevation", elevs is not None, None, elev_src))
-    cells = geo.grid(poly)
-    cols, rows, cw, ch = grid_meta(poly, cells)
-    inside = [c for c in cells if c["inside"]]
-    grid = {"cols": cols, "rows": rows, "square_w_m": round(cw, 1), "square_h_m": round(ch, 1),
-            "squares": len(inside), "square_area_m2": round(cw * ch), "edges_m": geo.edge_lengths_m(poly)}
-    return {"profile": profile, "wanted": wanted, "grid": grid, "sources": sources, "polygon": poly,
-            "_cells": cells, "_elev": (elevs, slopes, elev_src)}
+    return {"profile": profile, "wanted": wanted, "grid": grid_public(g, poly), "sources": sources, "polygon": poly,
+            "_grid": g, "_elev": (elevs, slopes, elev_src)}
 
 
-def grid_meta(poly: list[list[float]], cells: list[dict]) -> tuple[int, int, float, float]:
-    cols = max(c["c"] for c in cells) + 1
-    rows = max(c["r"] for c in cells) + 1
-    s, n, w, e = geo.bbox(poly)
-    lat0 = (s + n) / 2
-    return cols, rows, (e - w) * geo.m_per_deg_lon(lat0) / cols, (n - s) * geo.M_PER_DEG_LAT / rows
+def grid_public(g: dict, poly: list[list[float]], with_shapes: bool = False) -> dict:
+    out = {k: g[k] for k in ("cols", "rows", "square_w_m", "square_h_m", "angle_deg", "squares", "outline",
+                             "default_square_m")}
+    out["square_area_m2"] = round(g["square_w_m"] * g["square_h_m"])
+    out["edges_m"] = geo.edge_lengths_m(poly)
+    if with_shapes:
+        out["shapes"] = [c["shape"] for c in g["cells"] if c["inside"]]
+    return out
 
 
 def evaluate_wanted(text: str, clim: dict, lat: float, ctx: dict, extra: list[str] | None = None) -> list[dict]:
@@ -144,8 +146,7 @@ def evaluate_wanted(text: str, clim: dict, lat: float, ctx: dict, extra: list[st
     return out
 
 
-async def _try_elev(poly):
-    cells = geo.grid(poly)
+async def _try_elev(cells: list[dict], poly):
     pts = [(c["lat"], c["lon"]) for c in cells]
     try:
         e, s, label = await elevation.tile_elevations(pts, geo.bbox(poly))
@@ -161,57 +162,120 @@ async def create_plot(db: Session, user_id: int, data: dict) -> Plot:
     lat, lon = geo.centroid(poly)
     area = geo.polygon_area_m2(poly)
     analysis = await analyze(lat, lon, poly, area, data["soil"], data["farm_type"], data["water_m3_week"],
-                             data["priority"], data["prev_crops"], data["keep_crops"], data.get("lang", "en"))
+                             data["priority"], data["prev_crops"], data["keep_crops"], data.get("lang", "en"),
+                             "", data.get("square_w_m"), data.get("square_h_m"))
     prof = analysis["profile"]
-    cells = analysis["_cells"]
+    g = analysis["_grid"]
+    cells = g["cells"]
     elevs, slopes, elev_src = analysis["_elev"]
     if elevs is None:  # try once more; elevation services sometimes drop a request
-        elevs, slopes, elev_src = await _try_elev(poly)
+        elevs, slopes, elev_src = await _try_elev(cells, poly)
     plot = Plot(user_id=user_id, name=data["name"], region=prof["region"], lat=lat, lon=lon, polygon=jdump(poly),
                 area_m2=area, soil_class=prof["soil_texture"], soil_source=prof["soil_source"],
                 soil=jdump(prof["soil"] or {}), farm_type=data["farm_type"], water_m3_week=data["water_m3_week"],
                 budget_jod=data["budget_jod"], priority=data["priority"], prev_crops=jdump(data["prev_crops"]),
                 keep_crops=jdump(data["keep_crops"]), crops=jdump(data["crops"]), elevation_source=elev_src,
-                profile=jdump({k: v for k, v in prof.items()}))
+                profile=jdump({k: v for k, v in prof.items()}), square_w_m=g["square_w_m"],
+                square_h_m=g["square_h_m"], grid_angle=g["angle_deg"])
     db.add(plot)
     db.flush()
+    _add_tiles(db, plot, cells, elevs, slopes)
+    db.commit()
+    db.refresh(plot)
+    return plot
+
+
+def _add_tiles(db: Session, plot: Plot, cells: list[dict], elevs, slopes) -> list[Tile]:
     in_elev = [e for e, c in zip(elevs or [], cells) if c["inside"] and e is not None]
     lo_cut = None
     if len(in_elev) >= 4 and max(in_elev) - min(in_elev) >= 2.0:
         lo_cut = min(in_elev) + 0.25 * (max(in_elev) - min(in_elev))
+    out = []
     for i, c in enumerate(cells):
         e = elevs[i] if elevs else None
-        db.add(Tile(plot_id=plot.id, c=c["c"], r=c["r"], lat=c["lat"], lon=c["lon"], inside=c["inside"],
-                    area_m2=c["area_m2"], elev=e, slope_pct=slopes[i] if slopes else None,
-                    low=bool(c["inside"] and lo_cut is not None and e is not None and e <= lo_cut)))
+        t = Tile(plot_id=plot.id, c=c["c"], r=c["r"], lat=c["lat"], lon=c["lon"], inside=c["inside"],
+                 area_m2=c["area_m2"], elev=e, slope_pct=slopes[i] if slopes else None,
+                 low=bool(c["inside"] and lo_cut is not None and e is not None and e <= lo_cut))
+        db.add(t)
+        out.append(t)
+    return out
+
+
+async def regrid(db: Session, plot: Plot, square_w: float, square_h: float) -> Plot:
+    """Change the square size of an existing field. Crops and history move to the new square
+    that contains each old square's centre; a new square takes the first crop that lands in it."""
+    poly = jload(plot.polygon, [])
+    try:
+        g = geo.grid(poly, square_w, square_h, plot.grid_angle if plot.grid_angle is not None else None)
+    except geo.GridError as e:
+        raise InputNeeded("square", str(e))
+    elevs, slopes, label = await _try_elev(g["cells"], poly)
+    old = list(plot.tiles)
+    new = _add_tiles(db, plot, g["cells"], elevs, slopes)
+    db.flush()
+    inside_new = [t for t in new if t.inside]
+
+    def nearest(t: Tile) -> Tile:
+        return min(inside_new, key=lambda n: (n.lat - t.lat) ** 2 + (n.lon - t.lon) ** 2)
+
+    taken: set[int] = set()
+    for t in old:
+        target = nearest(t)
+        for pl in list(t.plantings):
+            if pl.active and target.id in taken:
+                pl.active = False  # two old squares merged into one new square: keep the first crop
+            pl.tile_id = target.id
+            if pl.active:
+                taken.add(target.id)
+        db.execute(Event.__table__.update().where(Event.tile_id == t.id).values(tile_id=target.id))
+    db.flush()
+    for t in old:
+        db.expire(t)
+        db.delete(t)
+    plot.square_w_m, plot.square_h_m, plot.grid_angle = g["square_w_m"], g["square_h_m"], g["angle_deg"]
+    if elevs is not None:
+        plot.elevation_source = label
+    if plot.appeears_status == "done":
+        plot.appeears_status = "not_started"  # new squares need fresh satellite points
     db.commit()
     db.refresh(plot)
     return plot
 
 
 # ---------------------------------------------------------------- plot state
-def _irrigation_by_tile(db: Session, plot_id: int) -> dict[int, dict[str, float]]:
-    out: dict[int, dict[str, float]] = {}
-    for ev in db.scalars(select(Event).where(Event.plot_id == plot_id, Event.kind == "irrigate")):
-        mm = jload(ev.data, {}).get("mm", 0.0)
-        d = out.setdefault(ev.tile_id or 0, {})
-        d[ev.on_date.isoformat()] = d.get(ev.on_date.isoformat(), 0.0) + mm
-    return out
-
-
-def _waiting_tiles(db: Session, plot_id: int, today: dt.date) -> set[int]:
-    q = select(Event).where(Event.plot_id == plot_id, Event.kind == "wait_rain",
-                            Event.on_date >= today - dt.timedelta(days=2))
-    return {e.tile_id for e in db.scalars(q) if e.tile_id}
-
-
 async def context(plot: Plot) -> dict:
     """Fetch everything a plot view needs, in parallel. Missing sources come back as None."""
     today = dt.date.today()
     (fc, fe), (clim, ce), (daily, de) = await asyncio.gather(
         _try(openmeteo.forecast(plot.lat, plot.lon)), _try(power.climatology(plot.lat, plot.lon)),
         _try(power.daily(plot.lat, plot.lon, dt.date(today.year - 1, 1, 1), today)))
+    if fc is None and clim is not None:
+        fc = (power_weather(plot.lat, plot.lon, daily[0] if daily else {}, clim[0], today), clim[1])
     return {"fc": fc, "fc_err": fe, "clim": clim, "clim_err": ce, "daily": daily, "daily_err": de}
+
+
+def power_weather(lat: float, lon: float, daily: dict, clim: dict, today: dt.date) -> dict:
+    """Stand-in for the forecast when Open-Meteo is unavailable, built only from NASA POWER.
+
+    Past 92 days: POWER daily temperature and rain, ET0 by Hargreaves (FAO-56 eq. 52).
+    Missing days and the coming 10 days: POWER long-term monthly normals. Marked `fallback`
+    so nothing presents normals as a forecast (alerts and spraying are switched off).
+    """
+    days = []
+    for k in range(-92, 10):
+        d = today + dt.timedelta(days=k)
+        m = climate.MONTHS[d.month - 1]
+        o = daily.get(d.isoformat()) if k < 0 else None
+        if o and o.get("tmax") is not None and o.get("tmin") is not None:
+            tmax, tmin, tmean, rain = o["tmax"], o["tmin"], o["t2m"], o.get("rain") or 0.0
+        else:
+            tmean, rng = clim["T2M"][m], clim["T2M_RANGE"][m] or 10.0
+            tmax, tmin, rain = tmean + rng / 2, tmean - rng / 2, clim["PRECTOTCORR"][m] or 0.0
+        doy = d.timetuple().tm_yday
+        days.append({"date": d.isoformat(), "tmax": tmax, "tmin": tmin, "rain": rain, "rain_prob": None,
+                     "et0": round(climate.et0_hargreaves(tmean, tmax, tmin, lat, doy), 2), "gust": None})
+    return {"timezone": None, "utc_offset_seconds": round(lon / 15) * 3600, "model_elevation": None,
+            "days": days, "hours": [], "fallback": True}
 
 
 def _theta_at(fc: dict, date: str) -> float | None:
@@ -266,8 +330,6 @@ async def plot_state(db: Session, plot: Plot) -> dict:
     clim = ctx["clim"][0] if ctx["clim"] else None
     today = openmeteo.local_now(fc).date() if fc else dt.date.today()
     sat = jload(plot.satellite, {})
-    irrigation = _irrigation_by_tile(db, plot.id)
-    waiting = _waiting_tiles(db, plot.id, today)
     obs = _obs_temps(ctx)
     last_harvest: dict[int, dt.date] = {}
     for ev in db.scalars(select(Event).where(Event.plot_id == plot.id, Event.kind == "harvest")):
@@ -292,17 +354,17 @@ async def plot_state(db: Session, plot: Plot) -> dict:
                 key = start.isoformat()
                 if key not in theta_cache:
                     theta_cache[key] = _theta_at(fc, key)
-                wb = water.simulate(crop, planting.planted_on, plot.soil_class, fc["days"], today,
-                                    irrigation.get(t.id, {}), theta_cache[key], plot.farm_type != "rain")
-                wb["refill_m3"] = round(wb["refill_mm"] * t.area_m2 / 1000, 1)
-                wb["waiting_for_rain"] = t.id in waiting and wb["needs_water"]
+                wb = water.schedule(crop, planting.planted_on, plot.soil_class, fc["days"], today,
+                                    theta_cache[key], plot.farm_type != "rain")
             item["planting"] = {"id": planting.id, "crop": crop.id, "planted_on": planting.planted_on.isoformat(),
                                 **ph, "water": wb}
         if t.inside:
             item["suitability"] = {c: tile_suitability(plot, t, c, scores.get(c, 50), sat) for c in jload(plot.crops, [])}
         tiles_out.append(item)
+    wplan = water_plan(plot, tiles_out, today)
+    wplan["estimate"] = bool(fc and fc.get("fallback"))
     weather = None
-    if fc:
+    if fc and fc.get("hours"):
         now = openmeteo.local_now(fc)
         hour = now.strftime("%Y-%m-%dT%H:00")
         cur = next((h for h in fc["hours"] if h["time"] == hour), fc["hours"][0])
@@ -317,7 +379,7 @@ async def plot_state(db: Session, plot: Plot) -> dict:
     srcs = _sources(ctx, plot, sat)
     return {
         "plot": plot_summary(plot), "today": today.isoformat(), "tiles": tiles_out, "weather": weather,
-        "grade": game.grade(active_crops), "alerts_open": len(open_alerts),
+        "grade": game.grade(active_crops), "alerts_open": len(open_alerts), "water_plan": wplan,
         "top_alert": open_alerts[0] if open_alerts else None, "sources": srcs,
         "satellite": {"status": plot.appeears_status, "error": plot.appeears_error,
                       "updated_at": plot.satellite_updated_at.isoformat() + "Z" if plot.satellite_updated_at else None,
@@ -326,10 +388,71 @@ async def plot_state(db: Session, plot: Plot) -> dict:
     }
 
 
+def water_plan(plot: Plot, tiles_out: list[dict], today: dt.date) -> dict:
+    """Share the farmer's weekly water between crops by need, and say when and how much to water.
+
+    Need = the water each square's plan applies over the next 7 days (FAO-56 balance, rain counted).
+    If the weekly amount is smaller than the need, every crop gets the same share of its need.
+    Amounts per square are scaled by that share and written back onto each square.
+    """
+    irrigated = plot.farm_type != "rain"
+    available = plot.water_m3_week or 0.0
+    groups: dict[str, dict] = {}
+    total_need = 0.0
+    for t in tiles_out:
+        p = t.get("planting")
+        w = (p or {}).get("water")
+        if not p or not w:
+            continue
+        g = groups.setdefault(p["crop"], {"crop": p["crop"], "squares": 0, "area_m2": 0.0, "need_m3": 0.0,
+                                          "dates": {}, "dormant": 0, "rain_postponed": False, "available_pct": []})
+        g["squares"] += 1
+        g["area_m2"] += t["area_m2"]
+        g["available_pct"].append(w["available_pct"])
+        g["dormant"] += 1 if w["dormant"] else 0
+        g["rain_postponed"] = g["rain_postponed"] or w["rain_postponed"]
+        for e in w["events"]:
+            m3 = e["mm"] * t["area_m2"] / 1000
+            d = g["dates"].setdefault(e["date"], {"date": e["date"], "squares": 0, "mm": 0.0, "m3": 0.0})
+            d["squares"] += 1
+            d["mm"] = max(d["mm"], e["mm"])
+            d["m3"] += m3
+            g["need_m3"] += m3
+        total_need += sum(e["mm"] * t["area_m2"] / 1000 for e in w["events"])
+    share = 1.0 if total_need <= 0 or not irrigated else min(1.0, available / total_need) if available > 0 else 0.0
+    crops = []
+    for g in groups.values():
+        dates = sorted(g["dates"].values(), key=lambda d: d["date"])
+        for d in dates:
+            d["mm"] = round(d["mm"] * share, 1)
+            d["m3"] = round(d["m3"] * share, 1)
+        crops.append({"crop": g["crop"], "squares": g["squares"], "area_m2": round(g["area_m2"]),
+                      "need_m3": round(g["need_m3"], 1), "give_m3": round(g["need_m3"] * share, 1),
+                      "dates": dates, "dormant": g["dormant"] == g["squares"], "rain_postponed": g["rain_postponed"],
+                      "soil_water_pct": round(sum(g["available_pct"]) / len(g["available_pct"]))})
+    crops.sort(key=lambda c: -c["need_m3"])
+    for t in tiles_out:  # amounts each square should actually get
+        w = (t.get("planting") or {}).get("water")
+        if w:
+            for e in w["events"]:
+                e["mm"] = round(e["mm"] * share, 1)
+                e["m3"] = round(e["mm"] * t["area_m2"] / 1000, 2)
+            w["today_mm"] = w["events"][0]["mm"] if w["water_today"] else 0.0
+    status = ("rainfed" if not irrigated else "no_crops" if not groups else "no_water" if available <= 0 and total_need > 0
+              else "enough" if share >= 0.999 else "short")
+    return {"week_start": today.isoformat(), "week_end": (today + dt.timedelta(days=6)).isoformat(),
+            "available_m3": round(available, 1), "need_m3": round(total_need, 1),
+            "share_pct": round(share * 100), "spare_m3": round(max(0.0, available - total_need), 1),
+            "status": status, "crops": crops, "estimate": False,
+            "method": "FAO-56 root-zone water balance with Open-Meteo ET0 and rain forecast"}
+
+
 def _sources(ctx: dict, plot: Plot, sat: dict) -> list[dict]:
     s = []
-    s.append(_src("Open-Meteo forecast", bool(ctx["fc"]), ctx["fc"][1] if ctx["fc"] else None,
-                  "ET0, rain, temperature, wind (92 past + 10 forecast days)",
+    fb = bool(ctx["fc"] and ctx["fc"][0].get("fallback"))
+    s.append(_src("Open-Meteo forecast", bool(ctx["fc"]) and not fb, ctx["fc"][1] if ctx["fc"] and not fb else None,
+                  "ET0, rain, temperature, wind (92 past + 10 forecast days)"
+                  + (" · unavailable: watering plan uses NASA POWER observations and normals instead" if fb else ""),
                   ctx["fc_err"].message if ctx["fc_err"] else ""))
     s.append(_src("NASA POWER climatology", bool(ctx["clim"]), ctx["clim"][1] if ctx["clim"] else None,
                   ctx["clim"][0].get("_period", "") if ctx["clim"] else "", ctx["clim_err"].message if ctx["clim_err"] else ""))
@@ -350,13 +473,16 @@ def plot_summary(plot: Plot) -> dict:
     tiles = plot.tiles
     cols = max((t.c for t in tiles), default=5) + 1
     rows = max((t.r for t in tiles), default=5) + 1
-    s, n, w, e = geo.bbox(poly)
-    lat0 = (s + n) / 2
-    cw = (e - w) * geo.m_per_deg_lon(lat0) / cols
-    ch = (n - s) * geo.M_PER_DEG_LAT / rows
+    if plot.square_w_m and plot.square_h_m and plot.grid_angle is not None:
+        cw, ch, angle = plot.square_w_m, plot.square_h_m, plot.grid_angle
+        outline = geo.outline_cells(poly, angle, cw, ch)
+    else:  # plots made before oriented grids
+        cw, ch = geo.legacy_frame(poly, cols, rows)
+        angle = 0.0
+        outline = geo.outline_cells(poly, 0.0, cw, ch)
     grid = {"cols": cols, "rows": rows, "square_w_m": round(cw, 1), "square_h_m": round(ch, 1),
-            "square_area_m2": round(cw * ch), "squares": sum(1 for t in tiles if t.inside),
-            "outline": geo.outline_in_grid(poly, cols, rows), "edges_m": geo.edge_lengths_m(poly)}
+            "square_area_m2": round(cw * ch), "squares": sum(1 for t in tiles if t.inside), "angle_deg": angle,
+            "outline": outline, "edges_m": geo.edge_lengths_m(poly), "default_square_m": geo.default_square(poly)}
     return {"grid": grid, "id": plot.id, "name": plot.name, "region": plot.region, "lat": plot.lat, "lon": plot.lon,
             "polygon": jload(plot.polygon, []), "area_m2": round(plot.area_m2), "soil_class": plot.soil_class,
             "soil_name": soilmod.NAMES[plot.soil_class], "soil_source": plot.soil_source, "farm_type": plot.farm_type,
@@ -368,8 +494,8 @@ def plot_summary(plot: Plot) -> dict:
 
 # ---------------------------------------------------------------- alerts
 async def alerts_for(db: Session, plot: Plot, ctx: dict, tiles_out: list[dict], today: dt.date) -> list[dict]:
-    if not ctx["fc"]:
-        return []
+    if not ctx["fc"] or ctx["fc"][0].get("fallback"):
+        return []  # never raise weather alarms from long-term averages
     sat = jload(plot.satellite, {})
     lst = sat.get("lst_night") or {}
     mean = sum(lst.values()) / len(lst) if lst else None
@@ -410,14 +536,7 @@ async def plan(db: Session, plot: Plot) -> dict:
     elif anom and anom["anomaly_c"] >= 1.5:
         advice.append({"type": "warm", "en": f"The last 30 days were {anom['anomaly_c']} °C warmer than normal (NASA POWER). Expect higher water use and earlier harvests.",
                        "ar": f"كانت آخر 30 يومًا أدفأ من المعتاد بـ {anom['anomaly_c']} °م (NASA POWER). توقّع استهلاكًا أعلى للمياه وحصادًا أبكر."})
-    # weekly water: next 7 days ETc - effective rain over planted tiles
     state = await plot_state(db, plot)
-    need_m3 = 0.0
-    for t in state["tiles"]:
-        w = (t["planting"] or {}).get("water")
-        if w:
-            net = max(0.0, w["etc_next7_mm"] - w["rain_eff_next48_mm"])
-            need_m3 += net * t["area_m2"] / 1000
     tr = prof.get("trend") or {}
     suggest = []
     if tr and (tr.get("rain_pct_per_decade", 0) <= -5 or tr.get("temp_c_per_decade", 0) >= 0.3):
@@ -429,7 +548,7 @@ async def plan(db: Session, plot: Plot) -> dict:
         "area_m2": plot.area_m2, "priority": plot.priority, "prev_crops": jload(plot.prev_crops, []), "trend": tr})}
     suggest = sorted(suggest, key=lambda c: -ranked[c]["score"])[:3]
     return {"calendar": rows, "anomaly": anom, "advice": advice,
-            "water": {"need_next7_m3": round(need_m3, 1), "available_m3_week": plot.water_m3_week},
+            "water": state["water_plan"],
             "grade": state["grade"], "trend": tr, "suggestions": [ranked[c] for c in suggest],
             "ndvi_series": jload(plot.satellite, {}).get("ndvi_series", []),
             "smap_series": jload(plot.satellite, {}).get("smap_series", []),

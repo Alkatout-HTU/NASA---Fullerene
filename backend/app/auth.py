@@ -1,52 +1,40 @@
-"""Email + password accounts with scrypt hashes and signed JWT bearer tokens."""
+"""No sign-in: each phone or browser is identified by a random key it keeps itself.
+
+The app creates a long random "farm key" on first use and sends it as the X-Farm-Key header.
+The server stores only its SHA-256 hash and creates the farmer's workspace on first sight.
+Showing the key in the app lets a farmer open the same farms on another device.
+"""
 from __future__ import annotations
 
-import base64
-import datetime as dt
 import hashlib
-import hmac
-import os
 
-import jwt
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi import Depends, Header, HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from .config import settings
 from .db import User, get_db
 
-_bearer = HTTPBearer(auto_error=False)
-N, R, P = 2 ** 14, 8, 1
+MIN_KEY_LEN = 24
 
 
-def hash_password(pw: str) -> str:
-    salt = os.urandom(16)
-    dk = hashlib.scrypt(pw.encode(), salt=salt, n=N, r=R, p=P, dklen=32)
-    return "scrypt$" + base64.b64encode(salt).decode() + "$" + base64.b64encode(dk).decode()
+def key_hash(key: str) -> str:
+    return hashlib.sha256(key.strip().encode()).hexdigest()
 
 
-def verify_password(pw: str, stored: str) -> bool:
-    try:
-        _, s, h = stored.split("$")
-        dk = hashlib.scrypt(pw.encode(), salt=base64.b64decode(s), n=N, r=R, p=P, dklen=32)
-        return hmac.compare_digest(dk, base64.b64decode(h))
-    except (ValueError, TypeError):
-        return False
-
-
-def make_token(user_id: int) -> str:
-    exp = dt.datetime.now(dt.timezone.utc) + dt.timedelta(days=settings.token_days)
-    return jwt.encode({"sub": str(user_id), "exp": exp}, settings.secret_key, algorithm="HS256")
-
-
-def current_user(cred: HTTPAuthorizationCredentials | None = Depends(_bearer), db: Session = Depends(get_db)) -> User:
-    if cred is None:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Sign in first.")
-    try:
-        data = jwt.decode(cred.credentials, settings.secret_key, algorithms=["HS256"])
-        user = db.get(User, int(data["sub"]))
-    except (jwt.PyJWTError, KeyError, ValueError):
-        user = None
+def current_user(x_farm_key: str | None = Header(default=None), db: Session = Depends(get_db)) -> User:
+    key = (x_farm_key or "").strip()
+    if len(key) < MIN_KEY_LEN or len(key) > 200:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Missing or invalid farm key.")
+    h = key_hash(key)
+    user = db.scalar(select(User).where(User.device_key == h))
     if user is None:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Your session expired. Sign in again.")
+        user = User(email=f"device-{h[:24]}@farmstudio.local", name="", password_hash="", device_key=h)
+        db.add(user)
+        try:
+            db.commit()
+        except IntegrityError:  # the same device sent two first requests at once
+            db.rollback()
+            user = db.scalar(select(User).where(User.device_key == h))
+        db.refresh(user)
     return user

@@ -56,7 +56,8 @@ async def request(source: str, method: str, url: str, *, retries: int = 3, **kw)
     for attempt in range(retries):
         try:
             r = await client().request(method, url, **kw)
-            if r.status_code in (429, 500, 502, 503, 504) and attempt < retries - 1:
+            # 429 (rate limit) is not retried: retrying only makes the limit worse
+            if r.status_code in (500, 502, 503, 504) and attempt < retries - 1:
                 await asyncio.sleep(2 ** attempt * 2)
                 continue
             return r

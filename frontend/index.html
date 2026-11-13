@@ -13,24 +13,23 @@
 <body>
 <div class="app" id="app">
 
-  <!-- AUTH -->
-  <section class="screen" id="scr-auth">
+  <!-- WELCOME (no account needed) -->
+  <section class="screen" id="scr-auth" hidden>
     <div class="auth">
       <button class="chip lang-switch" data-act="lang"><span data-t="langBtn"></span></button>
       <canvas id="welcomeCanvas" aria-hidden="true"></canvas>
-      <form class="panel pad stack" id="authForm" novalidate>
+      <div class="panel pad stack">
         <div class="logo">
           <div class="logo-mark"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M12 21V10"/><path d="M12 13c-4 0-6-3-6-6 3 0 6 2 6 6Z" fill="#fff" fill-opacity=".25"/><path d="M12 11c0-4 3-7 7-7 0 4-3 7-7 7Z" fill="#fff" fill-opacity=".25"/><circle cx="18.5" cy="18.5" r="2.3"/></svg></div>
           <h1 data-t="appName"></h1>
         </div>
         <p class="muted" style="margin:0" data-t="tagline"></p>
-        <div class="seg" id="authMode"><button type="button" data-v="login" aria-pressed="true" data-t="signIn"></button><button type="button" data-v="register" aria-pressed="false" data-t="createAccount"></button></div>
-        <div class="field" id="nameField" hidden><label class="label" for="aName" data-t="yourName"></label><input id="aName" autocomplete="name"></div>
-        <div class="field"><label class="label" for="aEmail" data-t="email"></label><input id="aEmail" type="email" autocomplete="email" required></div>
-        <div class="field"><label class="label" for="aPass" data-t="password"></label><input id="aPass" type="password" autocomplete="current-password" minlength="8" required></div>
-        <div class="err-box" id="authErr" hidden></div>
-        <button class="btn block" type="submit" id="authBtn"></button>
-      </form>
+        <button class="btn block" data-act="start" data-t="startBtn"></button>
+        <p class="muted" style="margin:0;font-size:13px" data-t="noAccount"></p>
+        <details><summary class="muted" style="cursor:pointer;font-size:13px" data-t="haveKey"></summary>
+          <form class="map-search" id="keyForm" style="margin-top:8px"><input id="keyIn" autocomplete="off" data-tp="keyPh"><button class="btn sm" type="submit" data-t="open"></button></form>
+        </details>
+      </div>
     </div>
   </section>
 
@@ -60,6 +59,17 @@
           <div class="row between"><span class="label" data-t="area"></span><b class="mono" id="areaOut">–</b></div>
           <span class="muted" style="font-size:13px" id="cornerHint"></span>
           <div class="note info" id="squareInfo" hidden></div>
+          <div class="stack" id="sizeBox" style="gap:8px" hidden>
+            <span class="label" data-t="squareSizeLbl"></span>
+            <div class="size-row">
+              <label><span data-t="along"></span><input id="sqW" type="number" inputmode="decimal" min="3" max="1000" step="1"></label>
+              <span class="muted">×</span>
+              <label><span data-t="across"></span><input id="sqH" type="number" inputmode="decimal" min="3" max="1000" step="1"></label>
+              <span class="muted">m</span>
+              <button class="btn sm ghost" type="button" data-act="sqAuto" data-t="auto"></button>
+            </div>
+            <span class="muted" style="font-size:12.5px" data-t="sizeHelp"></span>
+          </div>
           <details><summary class="muted" style="cursor:pointer" data-t="noCorners"></summary>
             <div class="stack" style="gap:8px;margin-top:10px">
               <label class="label" for="sqArea" data-t="areaDunum"></label>

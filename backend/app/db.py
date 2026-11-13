@@ -53,6 +53,7 @@ class User(Base):
     name: Mapped[str] = mapped_column(String(120), default="")
     password_hash: Mapped[str] = mapped_column(String(255))
     lang: Mapped[str] = mapped_column(String(5), default="en")
+    device_key: Mapped[str | None] = mapped_column(String(64), unique=True, index=True, nullable=True)  # sha256 of the device key
     rp: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=utcnow)
     plots: Mapped[list["Plot"]] = relationship(back_populates="user", cascade="all, delete-orphan")
@@ -69,6 +70,9 @@ class Plot(Base):
     polygon: Mapped[str] = mapped_column(Text)  # JSON [[lat, lon], ...]
     area_m2: Mapped[float] = mapped_column(Float)
     grid_n: Mapped[int] = mapped_column(Integer, default=6)
+    square_w_m: Mapped[float | None] = mapped_column(Float, nullable=True)   # square size along the field's main axis
+    square_h_m: Mapped[float | None] = mapped_column(Float, nullable=True)   # square size across it
+    grid_angle: Mapped[float | None] = mapped_column(Float, nullable=True)   # grid rotation, degrees from east
     soil_class: Mapped[str] = mapped_column(String(40))
     soil_source: Mapped[str] = mapped_column(String(40))  # "user" or "SoilGrids"
     soil: Mapped[str] = mapped_column(Text, default="{}")  # JSON texture %
@@ -149,6 +153,28 @@ class Cache(Base):
 
 def init_db() -> None:
     Base.metadata.create_all(engine)
+    _add_missing_columns()
+
+
+def _add_missing_columns() -> None:
+    """Tiny forward-only migration: add columns that newer versions of the models define.
+
+    Lets an existing farmstudio.db keep working after `git pull` (no data is changed or removed).
+    """
+    from sqlalchemy import inspect, text
+    insp = inspect(engine)
+    with engine.begin() as conn:
+        for table in Base.metadata.sorted_tables:
+            if not insp.has_table(table.name):
+                continue
+            have = {c["name"] for c in insp.get_columns(table.name)}
+            for col in table.columns:
+                if col.name in have:
+                    continue
+                ddl = col.type.compile(dialect=engine.dialect)
+                conn.execute(text(f'ALTER TABLE {table.name} ADD COLUMN {col.name} {ddl}'))
+                if col.unique or col.index:
+                    conn.execute(text(f'CREATE INDEX IF NOT EXISTS ix_{table.name}_{col.name} ON {table.name} ({col.name})'))
 
 
 def get_db():
