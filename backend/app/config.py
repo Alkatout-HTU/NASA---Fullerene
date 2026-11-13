@@ -54,7 +54,8 @@ class Settings:
             "soilgrids": True,
             "earthdata_appeears": self.earthdata_enabled,
             "opentopography_srtm": bool(self.opentopography_api_key),
-            "nominatim": bool(self.nominatim_email),
+            "nominatim": True,
+            "nominatim_contact_email": bool(self.nominatim_email),
             "secret_key_set": bool(_env("SECRET_KEY")),
         }
 

@@ -1,23 +1,7 @@
-"""Resilience Points (RP) and the farm's resilience grade."""
+"""The farm's resilience grade (crop diversity and drought tolerance)."""
 from __future__ import annotations
 
 from .crops import CROPS
-
-RP = {
-    "plant_good": 10,       # planted where suitability >= 75
-    "plant_ok": 5,          # suitability 55–74
-    "plant_poor": 2,
-    "irrigate_needed": 5,   # watered a plot the water balance says needed it
-    "wait_rain": 15,        # skipped watering because rain is forecast
-    "spray_green": 20,
-    "spray_yellow": 5,
-    "alert_action": 20,
-    "harvest_on_time": 8,
-}
-
-
-def plant_points(score: int) -> int:
-    return RP["plant_good"] if score >= 75 else RP["plant_ok"] if score >= 55 else RP["plant_poor"]
 
 
 def grade(active_crops: list[str]) -> dict:

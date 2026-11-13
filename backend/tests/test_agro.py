@@ -104,3 +104,46 @@ def test_aaigrid_sampling():
                                 "1 2 3\n4 5 6\n")
     assert elevation.sample(g, 32.15, 35.05) == 1
     assert elevation.sample(g, 32.05, 35.25) == 6
+
+
+def test_grid_follows_field_shape_and_size():
+    # 400 m x 100 m strip: squares should stay close to square, not stretched
+    poly = [[32.0, 35.9], [32.0, 35.9 + 400 / geo.m_per_deg_lon(32.0)],
+            [32.0 - 100 / geo.M_PER_DEG_LAT, 35.9 + 400 / geo.m_per_deg_lon(32.0)], [32.0 - 100 / geo.M_PER_DEG_LAT, 35.9]]
+    cols, rows, w, h = geo.grid_size(poly)
+    assert cols > rows and 0.6 < w / h < 1.6
+    cells = geo.grid(poly)
+    total = sum(c["area_m2"] for c in cells if c["inside"])
+    assert abs(total - 40_000) < 400
+
+
+def test_grid_l_shape_leaves_corner_out():
+    k = 1 / geo.M_PER_DEG_LAT
+    j = 1 / geo.m_per_deg_lon(32.0)
+    # 200 m x 200 m L-shape: the north-east 100 x 100 m is missing
+    poly = [[32.0, 35.9], [32.0, 35.9 + 100 * j], [32.0 - 100 * k, 35.9 + 100 * j], [32.0 - 100 * k, 35.9 + 200 * j],
+            [32.0 - 200 * k, 35.9 + 200 * j], [32.0 - 200 * k, 35.9]]
+    cells = geo.grid(poly)
+    ne = [c for c in cells if c["r"] == 0 and c["c"] == max(x["c"] for x in cells)][0]
+    assert not ne["inside"]
+    assert abs(sum(c["area_m2"] for c in cells) - 30_000) < 600
+
+
+def test_match_typed_crops():
+    from app.agro import matching
+    got = [x["crop"] for x in matching.parse("بندورة، عنب وزيتون, zuchini, avocado")]
+    assert got == ["tomato", "grape", "olive", "squash", None]
+
+
+def test_typed_crop_gets_verdict():
+    r = climate.score_crop(CROPS["apple"], CLIM, 32.47, {})
+    assert r["verdict"] == "poor" and "Not recommended" in r["summary"]["en"]
+    r = climate.score_crop(CROPS["barley"], CLIM, 32.47, {})
+    assert r["verdict"] == "good"
+
+
+def test_perennial_not_ready_after_harvest_this_season():
+    st = phenology.status(CROPS["olive"], dt.date(2015, 1, 1), dt.date(2026, 11, 1), {}, None)
+    assert st["ready"]
+    st = phenology.status(CROPS["olive"], dt.date(2015, 1, 1), dt.date(2026, 11, 1), {}, None, dt.date(2026, 10, 20))
+    assert not st["ready"] and st["harvested_this_season"]

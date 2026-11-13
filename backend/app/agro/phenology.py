@@ -35,7 +35,8 @@ def gdd_harvest_date(crop: Crop, today: dt.date, obs_daily: dict[str, float], cl
     return None
 
 
-def status(crop: Crop, planted_on: dt.date, today: dt.date, obs_daily: dict[str, float], clim: dict | None) -> dict:
+def status(crop: Crop, planted_on: dt.date, today: dt.date, obs_daily: dict[str, float], clim: dict | None,
+           last_harvest: dt.date | None = None) -> dict:
     """{"stage": 0-4, "ready": bool, "harvest_from": iso, "harvest_to": iso, "method": str}"""
     if not crop.perennial:
         age = (today - planted_on).days
@@ -65,7 +66,12 @@ def status(crop: Crop, planted_on: dt.date, today: dt.date, obs_daily: dict[str,
             h_from, h_to = _window(crop, season_start.year + 1)
         method = "regional harvest window"
     ready = h_from <= today <= h_to
+    harvested = bool(last_harvest and h_from <= last_harvest <= h_to)
+    if harvested:  # already picked this season: wait for the next one
+        ready = False
     span = max(1, (h_from - season_start).days)
     stage = 4 if ready else max(0, min(3, int(4 * (today - season_start).days / span)))
-    return {"stage": stage, "ready": ready, "age_days": (today - planted_on).days, "harvest_from": h_from.isoformat(),
+    if harvested:
+        stage = 1
+    return {"stage": stage, "ready": ready, "harvested_this_season": harvested, "age_days": (today - planted_on).days, "harvest_from": h_from.isoformat(),
             "harvest_to": h_to.isoformat(), "method": method}

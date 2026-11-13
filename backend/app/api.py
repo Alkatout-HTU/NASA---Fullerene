@@ -3,20 +3,20 @@ from __future__ import annotations
 
 import datetime as dt
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from . import services
-from .agro import game, geo
+from .agro import geo, matching
 from .agro import soil as soilmod
 from .agro.crops import CROPS
 from .auth import current_user, hash_password, make_token, verify_password
 from .config import settings
 from .db import Event, Planting, Plot, Tile, User, get_db, jdump, jload
-from .schemas import (AlertAction, FarmInputs, Irrigate, Login, Plant, PlotCreate, PlotUpdate, Prefs,
+from .schemas import (AlertAction, Evaluate, FarmInputs, Irrigate, Login, Plant, PlotCreate, PlotUpdate, Prefs,
                       Register, SprayBook, TileAction)
-from .sources import openmeteo
+from .sources import geocode
 from .worker import refresh_satellite
 
 router = APIRouter(prefix="/api")
@@ -34,7 +34,12 @@ def health():
 
 @router.get("/crops")
 def crops():
-    return [c.public() for c in CROPS.values()]
+    out = []
+    for c in CROPS.values():
+        d = c.public()
+        d["synonyms"] = list(matching.SYNONYMS.get(c.id, ()))
+        out.append(d)
+    return out
 
 
 @router.get("/soils")
@@ -43,9 +48,26 @@ def soils():
             for k, v in soilmod.NAMES.items()]
 
 
+@router.get("/crops/match")
+def match_crops(text: str = Query("", max_length=500)):
+    return matching.parse(text)
+
+
+# ------------------------------------------------------------------ places (Jordan)
+@router.get("/geo/search")
+async def geo_search(q: str = Query(min_length=2, max_length=120), lang: str = "en",
+                     user: User = Depends(current_user)):
+    return await geocode.search(q, lang)
+
+
+@router.get("/geo/reverse")
+async def geo_reverse(lat: float, lon: float, lang: str = "en", user: User = Depends(current_user)):
+    return {"name": await geocode.place_name(lat, lon, lang)}
+
+
 # ------------------------------------------------------------------ auth
 def _user_out(u: User) -> dict:
-    return {"id": u.id, "email": u.email, "name": u.name, "lang": u.lang, "rp": u.rp}
+    return {"id": u.id, "email": u.email, "name": u.name, "lang": u.lang}
 
 
 @router.post("/auth/register")
@@ -82,12 +104,17 @@ def update_me(body: Prefs, user: User = Depends(current_user), db: Session = Dep
 
 
 # ------------------------------------------------------------------ analysis
+def _public(analysis: dict) -> dict:
+    return {k: v for k, v in analysis.items() if not k.startswith("_")}
+
+
 @router.post("/analyze")
 async def analyze(body: FarmInputs, user: User = Depends(current_user)):
     lat, lon = geo.centroid(body.polygon)
     area = geo.polygon_area_m2(body.polygon)
-    return await services.analyze(lat, lon, body.polygon, area, body.soil, body.farm_type, body.water_m3_week,
-                                  body.priority, body.prev_crops, body.keep_crops, body.lang)
+    res = await services.analyze(lat, lon, body.polygon, area, body.soil, body.farm_type, body.water_m3_week,
+                                 body.priority, body.prev_crops, body.keep_crops, body.lang, body.wanted)
+    return _public(res)
 
 
 # ------------------------------------------------------------------ plots
@@ -98,10 +125,10 @@ def _plot(db: Session, user: User, plot_id: int) -> Plot:
     return p
 
 
-def _tiles(db: Session, plot: Plot, ids: list[int]) -> list[Tile]:
+def _tiles(plot: Plot, ids: list[int]) -> list[Tile]:
     tiles = [t for t in plot.tiles if t.id in set(ids)]
     if len(tiles) != len(set(ids)):
-        raise HTTPException(404, "Some of those plots are not part of this field.")
+        raise HTTPException(404, "Some of those squares are not part of this field.")
     return tiles
 
 
@@ -120,9 +147,7 @@ async def create_plot(body: PlotCreate, user: User = Depends(current_user), db: 
 
 @router.get("/plots/{plot_id}")
 async def get_plot(plot_id: int, user: User = Depends(current_user), db: Session = Depends(get_db)):
-    state = await services.plot_state(db, _plot(db, user, plot_id))
-    state["user_rp"] = user.rp
-    return state
+    return await services.plot_state(db, _plot(db, user, plot_id))
 
 
 @router.patch("/plots/{plot_id}")
@@ -141,139 +166,145 @@ def delete_plot(plot_id: int, user: User = Depends(current_user), db: Session = 
     return {"ok": True}
 
 
-async def _after(db: Session, user: User, plot: Plot, rp: int, message: dict) -> dict:
-    user.rp += rp
+@router.post("/plots/{plot_id}/evaluate")
+async def evaluate(plot_id: int, body: Evaluate, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    """Judge crops the farmer types for an existing field."""
+    p = _plot(db, user, plot_id)
+    clim, _ = await services.power.climatology(p.lat, p.lon)
+    prof = jload(p.profile, {})
+    ctx = {"soil_texture": p.soil_class, "farm_type": p.farm_type, "water_m3_week": p.water_m3_week,
+           "area_m2": p.area_m2, "priority": p.priority, "prev_crops": jload(p.prev_crops, []),
+           "trend": prof.get("trend")}
+    return services.evaluate_wanted(body.text, clim, p.lat, ctx)
+
+
+async def _after(db: Session, plot: Plot, message: dict, extra: dict | None = None) -> dict:
     db.commit()
     db.refresh(plot)
-    state = await services.plot_state(db, plot)
-    state["user_rp"] = user.rp
-    return {"rp_awarded": rp, "user_rp": user.rp, "message": message, "state": state}
+    return {"message": message, "state": await services.plot_state(db, plot), **(extra or {})}
 
 
 @router.post("/plots/{plot_id}/plant")
 async def plant(plot_id: int, body: Plant, user: User = Depends(current_user), db: Session = Depends(get_db)):
     p = _plot(db, user, plot_id)
-    tiles = _tiles(db, p, body.tile_ids)
+    tiles = _tiles(p, body.tile_ids)
     try:
         planted_on = dt.date.fromisoformat(body.planted_on) if body.planted_on else dt.date.today()
     except ValueError:
         raise HTTPException(422, "planted_on must be a date like 2026-03-01")
     if planted_on > dt.date.today():
         raise HTTPException(422, "The planting date cannot be in the future.")
+    if planted_on < dt.date.today() - dt.timedelta(days=365 * 80):
+        raise HTTPException(422, "The planting date is too far in the past.")
     for t in tiles:
         if not t.inside:
             raise HTTPException(409, "That square is outside your field boundary.")
         if any(x.active for x in t.plantings):
-            raise HTTPException(409, "That plot already has a crop. Harvest it first.")
-    clim = None
-    try:
-        clim = await services.power.climatology(p.lat, p.lon)
-    except services.UpstreamError:
-        pass
-    scores = services.base_scores(p, clim)
-    sat = jload(p.satellite, {})
-    rp = 0
+            raise HTTPException(409, "That square already has a crop. Harvest it first.")
     for t in tiles:
-        s = services.tile_suitability(p, t, body.crop, scores.get(body.crop, 50), sat)
-        pts = game.plant_points(s)
-        rp += pts
         db.add(Planting(plot_id=p.id, tile_id=t.id, crop=body.crop, planted_on=planted_on))
         db.add(Event(plot_id=p.id, tile_id=t.id, kind="plant", on_date=dt.date.today(),
-                     data=jdump({"crop": body.crop, "suitability": s}), rp=pts))
+                     data=jdump({"crop": body.crop, "planted_on": planted_on.isoformat()})))
     crops = jload(p.crops, [])
     if body.crop not in crops:
         p.crops = jdump(crops + [body.crop])
     c = CROPS[body.crop]
-    return await _after(db, user, p, rp, msg(f"{c.en} planted on {len(tiles)} square(s)", f"تمت زراعة {c.ar} في {len(tiles)} مربع"))
+    return await _after(db, p, msg(f"{c.en} planted on {len(tiles)} square(s)", f"تمت زراعة {c.ar} في {len(tiles)} مربع"))
+
+
+@router.post("/plots/{plot_id}/clear")
+async def clear(plot_id: int, body: TileAction, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    """Remove a crop that was planted by mistake or failed (no harvest logged)."""
+    p = _plot(db, user, plot_id)
+    n = 0
+    for t in _tiles(p, body.tile_ids):
+        for pl in t.plantings:
+            if pl.active:
+                pl.active = False
+                n += 1
+                db.add(Event(plot_id=p.id, tile_id=t.id, kind="clear", on_date=dt.date.today(),
+                             data=jdump({"crop": pl.crop})))
+    if not n:
+        raise HTTPException(409, "Nothing is planted there.")
+    return await _after(db, p, msg(f"Cleared {n} square(s)", f"تم تفريغ {n} مربع"))
 
 
 @router.post("/plots/{plot_id}/irrigate")
 async def irrigate(plot_id: int, body: Irrigate, user: User = Depends(current_user), db: Session = Depends(get_db)):
     p = _plot(db, user, plot_id)
-    tiles = _tiles(db, p, body.tile_ids)
+    tiles = _tiles(p, body.tile_ids)
     state = await services.plot_state(db, p)
     by_id = {t["id"]: t for t in state["tiles"]}
-    rp = 0
     total_m3 = 0.0
     today = dt.date.fromisoformat(state["today"])
     for t in tiles:
         info = by_id[t.id]
-        w = (info.get("planting") or {}).get("water")
         if not info.get("planting"):
             raise HTTPException(409, "Nothing is planted there yet.")
+        w = info["planting"].get("water")
         mm = body.mm or (w["refill_mm"] if w and w["needs_water"] else None)
         if mm is None:
             pct = w["available_pct"] if w else "?"
-            raise HTTPException(409, f"This plot does not need water today ({pct}% of soil water still available). "
-                                     "Send an amount in mm to water anyway.")
-        pts = game.RP["irrigate_needed"] if (w and w["needs_water"] and not w["wait_for_rain"]) else 0
+            raise HTTPException(409, f"This square does not need water today ({pct}% of soil water still available). "
+                                     "Enter an amount in mm to water anyway.")
         m3 = mm * t.area_m2 / 1000
         total_m3 += m3
-        rp += pts
         db.add(Event(plot_id=p.id, tile_id=t.id, kind="irrigate", on_date=today,
-                     data=jdump({"mm": round(mm, 1), "m3": round(m3, 2)}), rp=pts))
-    return await _after(db, user, p, rp, msg(f"Logged {total_m3:,.1f} m³ of irrigation", f"تم تسجيل {total_m3:,.1f} م³ من الري"))
+                     data=jdump({"mm": round(mm, 1), "m3": round(m3, 2)})))
+    return await _after(db, p, msg(f"Logged {total_m3:,.1f} m³ of irrigation", f"تم تسجيل {total_m3:,.1f} م³ من الري"))
 
 
 @router.post("/plots/{plot_id}/wait-rain")
 async def wait_rain(plot_id: int, body: TileAction, user: User = Depends(current_user), db: Session = Depends(get_db)):
     p = _plot(db, user, plot_id)
-    tiles = _tiles(db, p, body.tile_ids)
+    tiles = _tiles(p, body.tile_ids)
     state = await services.plot_state(db, p)
     by_id = {t["id"]: t for t in state["tiles"]}
     today = dt.date.fromisoformat(state["today"])
-    recent = {e.tile_id for e in db.scalars(select(Event).where(
-        Event.plot_id == p.id, Event.kind == "wait_rain", Event.on_date >= today - dt.timedelta(days=2)))}
-    rp = 0
     saved = 0.0
     for t in tiles:
         w = ((by_id[t.id].get("planting") or {}).get("water")) or {}
         if not w.get("wait_for_rain"):
-            raise HTTPException(409, "Not enough rain is forecast in the next 48 hours to skip watering this plot.")
-        pts = 0 if t.id in recent else game.RP["wait_rain"]
-        rp += pts
+            raise HTTPException(409, "Not enough rain is forecast in the next 48 hours to skip watering this square.")
         saved += w.get("refill_m3", 0)
         db.add(Event(plot_id=p.id, tile_id=t.id, kind="wait_rain", on_date=today,
-                     data=jdump({"saved_m3": w.get("refill_m3", 0), "rain48": w.get("rain_eff_next48_mm")}), rp=pts))
-    return await _after(db, user, p, rp, msg(f"Waiting for rain saves about {saved:,.1f} m³", f"انتظار المطر يوفر حوالي {saved:,.1f} م³"))
+                     data=jdump({"saved_m3": w.get("refill_m3", 0), "rain48": w.get("rain_eff_next48_mm")})))
+    return await _after(db, p, msg(f"Waiting for rain saves about {saved:,.1f} m³", f"انتظار المطر يوفر حوالي {saved:,.1f} م³"))
 
 
 @router.post("/plots/{plot_id}/harvest")
 async def harvest(plot_id: int, body: TileAction, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    """Harvest the squares that are ready. Squares that are not ready are reported, not harvested."""
     p = _plot(db, user, plot_id)
-    tiles = _tiles(db, p, body.tile_ids)
+    tiles = _tiles(p, body.tile_ids)
     state = await services.plot_state(db, p)
     by_id = {t["id"]: t for t in state["tiles"]}
     today = dt.date.fromisoformat(state["today"])
-    rp = n = 0
+    done, not_ready = [], []
     for t in tiles:
         planting = next((x for x in t.plantings if x.active), None)
-        if not planting:
+        info = (by_id[t.id].get("planting") or {})
+        if not planting or not info.get("ready"):
+            if planting:
+                not_ready.append({"tile_id": t.id, "harvest_from": info.get("harvest_from")})
             continue
-        info = by_id[t.id]["planting"] or {}
-        pts = game.RP["harvest_on_time"] if info.get("ready") else 0
-        if CROPS[planting.crop].perennial:
-            # perennials stay in the ground: log the harvest, keep the planting
-            pass
-        else:
+        if not CROPS[planting.crop].perennial:  # trees and vines stay; annual crops leave the field
             planting.active = False
             planting.harvested_on = today
-        rp += pts
-        n += 1
-        db.add(Event(plot_id=p.id, tile_id=t.id, kind="harvest", on_date=today,
-                     data=jdump({"crop": planting.crop, "ready": bool(info.get("ready"))}), rp=pts))
-    if not n:
-        raise HTTPException(409, "There is nothing to harvest on those squares.")
-    return await _after(db, user, p, rp, msg(f"Harvested {n} square(s)", f"تم حصاد {n} مربع"))
+        done.append(t.id)
+        db.add(Event(plot_id=p.id, tile_id=t.id, kind="harvest", on_date=today, data=jdump({"crop": planting.crop})))
+    if not done:
+        raise HTTPException(409, "None of those squares is ready to harvest yet.")
+    return await _after(db, p, msg(f"Harvested {len(done)} square(s)", f"تم حصاد {len(done)} مربع"),
+                        {"harvested": done, "not_ready": not_ready})
 
 
 @router.get("/plots/{plot_id}/spray-window")
 async def spray_window(plot_id: int, user: User = Depends(current_user), db: Session = Depends(get_db)):
     p = _plot(db, user, plot_id)
     out = await services.spray_windows(p)
-    bookings = [jload(e.data, {}) | {"rp": e.rp} for e in db.scalars(select(Event).where(
+    out["bookings"] = [jload(e.data, {}) for e in db.scalars(select(Event).where(
         Event.plot_id == p.id, Event.kind == "spray", Event.on_date >= dt.date.today() - dt.timedelta(days=1)))]
-    out["bookings"] = bookings
     return out
 
 
@@ -289,14 +320,13 @@ async def book_spray(plot_id: int, body: SprayBook, user: User = Depends(current
     if block["zone"] == "r":
         why = (block["why"] or {}).get("en", "unsafe conditions")
         raise HTTPException(409, f"Spraying is locked for this slot: {why}.")
-    day = body.start[:10]
-    already = [e for e in db.scalars(select(Event).where(Event.plot_id == p.id, Event.kind == "spray"))
-               if jload(e.data, {}).get("start", "")[:10] == day]
-    pts = 0 if already else (game.RP["spray_green"] if block["zone"] == "g" else game.RP["spray_yellow"])
-    db.add(Event(plot_id=p.id, kind="spray", on_date=dt.date.fromisoformat(day),
-                 data=jdump({"start": body.start, "tool": body.tool, "zone": block["zone"], "wind": block["wind_kmh"]}), rp=pts))
-    return await _after(db, user, p, pts, msg(f"Spraying booked for {body.start.replace('T', ' ')}",
-                                              f"تم حجز الرش في {body.start.replace('T', ' ')}"))
+    if any(jload(e.data, {}).get("start") == body.start
+           for e in db.scalars(select(Event).where(Event.plot_id == p.id, Event.kind == "spray"))):
+        raise HTTPException(409, "You already booked this slot.")
+    db.add(Event(plot_id=p.id, kind="spray", on_date=dt.date.fromisoformat(body.start[:10]),
+                 data=jdump({"start": body.start, "tool": body.tool, "zone": block["zone"], "wind": block["wind_kmh"]})))
+    return await _after(db, p, msg(f"Spraying booked for {body.start.replace('T', ' ')}",
+                                   f"تم حجز الرش في {body.start.replace('T', ' ')}"))
 
 
 @router.get("/plots/{plot_id}/alerts")
@@ -318,10 +348,8 @@ async def alert_act(plot_id: int, body: AlertAction, user: User = Depends(curren
         raise HTTPException(404, "That warning is no longer in the forecast.")
     if body.idx in a["done"]:
         raise HTTPException(409, "Already marked as done.")
-    pts = game.RP["alert_action"]
-    db.add(Event(plot_id=p.id, kind="alert_action", on_date=dt.date.today(),
-                 data=jdump({"key": body.key, "idx": body.idx}), rp=pts))
-    return await _after(db, user, p, pts, msg("Marked as done", "تم التنفيذ"))
+    db.add(Event(plot_id=p.id, kind="alert_action", on_date=dt.date.today(), data=jdump({"key": body.key, "idx": body.idx})))
+    return await _after(db, p, msg("Marked as done", "تم التنفيذ"))
 
 
 @router.get("/plots/{plot_id}/plan")
@@ -334,7 +362,7 @@ def events(plot_id: int, user: User = Depends(current_user), db: Session = Depen
     p = _plot(db, user, plot_id)
     rows = db.scalars(select(Event).where(Event.plot_id == p.id).order_by(Event.at.desc()).limit(200))
     return [{"id": e.id, "kind": e.kind, "tile_id": e.tile_id, "date": e.on_date.isoformat(), "at": e.at.isoformat() + "Z",
-             "data": jload(e.data, {}), "rp": e.rp} for e in rows]
+             "data": jload(e.data, {})} for e in rows]
 
 
 @router.post("/plots/{plot_id}/satellite/refresh")

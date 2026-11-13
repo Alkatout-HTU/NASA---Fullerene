@@ -62,6 +62,7 @@ class FarmInputs(Polygon):
     priority: Literal["water", "soil", "cost"] = "water"
     prev_crops: list[str] = []
     keep_crops: list[str] = []
+    wanted: str = Field(default="", max_length=500)  # crops the farmer typed, any language
     lang: Lang = "en"
 
     @field_validator("prev_crops", "keep_crops")
@@ -98,6 +99,10 @@ class PlotUpdate(BaseModel):
     @classmethod
     def _crops_ok(cls, v: list[str] | None) -> list[str] | None:
         return _crop_list(v) if v is not None else v
+
+
+class Evaluate(BaseModel):
+    text: str = Field(min_length=1, max_length=500)
 
 
 class TileAction(BaseModel):
