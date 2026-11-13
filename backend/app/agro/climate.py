@@ -125,6 +125,20 @@ def calendar_rows(crop: Crop, clim: dict) -> dict:
         s = crop.season_start_month - 1
         for k in range(10):
             row[(s + k) % 12] = "g"
+        if crop.gdd_harvest and crop.gdd_base is not None:
+            acc, m = 0.0, s
+            for k in range(12):
+                m = (s + k) % 12
+                acc += max(0.0, clim["T2M"][MONTHS[m]] - crop.gdd_base) * MDAYS[m]
+                if acc >= crop.gdd_harvest:
+                    break
+            row[m] = "h"
+            row[(m + 1) % 12] = "h"
+            for k in range(2, 12):  # dormant after harvest until the next season
+                mm = (m + k) % 12
+                if mm == s:
+                    break
+                row[mm] = ""
         if crop.harvest_window:
             a = int(crop.harvest_window[0][:2]) - 1
             b = int(crop.harvest_window[1][:2]) - 1
