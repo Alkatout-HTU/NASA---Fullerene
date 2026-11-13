@@ -24,6 +24,15 @@ class UpstreamError(Exception):
         self.message = message
 
 
+class InputNeeded(Exception):
+    """The farmer has to supply something we could not look up (shown as HTTP 422)."""
+
+    def __init__(self, field: str, message: str):
+        super().__init__(message)
+        self.field = field
+        self.message = message
+
+
 def client() -> httpx.AsyncClient:
     global _client
     if _client is None:

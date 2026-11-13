@@ -14,7 +14,7 @@ from .agro import climate, game, geo, matching, phenology, spray, water
 from .agro import soil as soilmod
 from .agro.crops import CROPS
 from .db import Event, Planting, Plot, Tile, jdump, jload
-from .http import UpstreamError
+from .http import InputNeeded, UpstreamError
 from .sources import elevation, geocode, openmeteo, power, soilgrids
 
 log = logging.getLogger("farmstudio.services")
@@ -31,6 +31,8 @@ async def _try(coro):
     except UpstreamError as e:
         log.warning("source failed: %s", e)
         return None, e
+    except soilgrids.NoSoilData:
+        return None, UpstreamError("NoSoilData", "no soil data nearby")
     except Exception as e:  # network or parsing problems should not take the whole response down
         log.exception("source failed")
         return None, UpstreamError("unknown", str(e))
@@ -49,7 +51,7 @@ async def analyze(lat: float, lon: float, polygon: list[list[float]] | None, are
     clim_t = power.climatology(lat, lon)
     mon_t = power.monthly(lat, lon, 2001, year - 1)
     day_t = power.daily(lat, lon, today - dt.timedelta(days=45), today)
-    soil_t = soilgrids.texture(lat, lon) if soil_choice == "auto" else _none()
+    soil_t = soilgrids.texture_near(lat, lon) if soil_choice == "auto" else _none()
     poly = polygon or geo.square_around(lat, lon, area_m2)
     (clim, ce), (mon, me), (daily, de), (soil, se), (elevs, slopes, elev_src) = await asyncio.gather(
         _try(clim_t), _try(mon_t), _try(day_t), _try(soil_t), _try_elev(poly))
@@ -78,9 +80,14 @@ async def analyze(lat: float, lon: float, polygon: list[list[float]] | None, are
         soil_v = soil[0]
         texture = soilmod.classify(soil_v["sand"], soil_v["clay"], soil_v.get("silt"))
         texture_src = "SoilGrids"
-        sources.append(_src("ISRIC SoilGrids", True, soil[1], f"clay {soil_v['clay']:.0f}%, sand {soil_v['sand']:.0f}%"))
+        near = f" · nearest data {soil_v['distance_m']} m away" if soil_v.get("distance_m") else ""
+        sources.append(_src("ISRIC SoilGrids", True, soil[1], f"clay {soil_v['clay']:.0f}%, sand {soil_v['sand']:.0f}%{near}"))
+    elif se is not None and se.source == "NoSoilData":
+        raise InputNeeded("soil", "SoilGrids has no soil map for this spot (it leaves towns and roads blank). "
+                                  "Go back one step and choose your soil type.")
     else:
-        raise UpstreamError("SoilGrids", (se.message if se else "") + " — choose the soil type yourself and try again")
+        raise InputNeeded("soil", "The soil map service (SoilGrids) is not answering right now. "
+                                  "Go back one step and choose your soil type.")
     ctx = {"soil_texture": texture, "farm_type": farm_type, "water_m3_week": water_m3_week, "area_m2": area_m2,
            "priority": priority, "prev_crops": prev_crops, "trend": tr}
     wanted = evaluate_wanted(wanted_text, clim_v, lat, ctx, keep_crops)

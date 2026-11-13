@@ -32,7 +32,9 @@ errWant:["Write at least one crop you want to grow.","اكتب محصولًا و
 farmType:["Farm type","نوع الزراعة"],rainfed:["Rain-fed","بعلية"],irrigated:["Irrigated","مروية"],both:["Both","كلاهما"],
 waterAvail:["Water available (m³ per week)","المياه المتاحة (م³ أسبوعيًا)"],budget:["Budget per season (JOD)","الميزانية لكل موسم (دينار)"],
 prevCrops:["Grown here last season (optional)","زُرع هنا الموسم الماضي (اختياري)"],
-prevPh:["e.g. tomatoes","مثلًا: بندورة"],dataUsed:["Data used ({n})","البيانات المستخدمة ({n})"],
+prevPh:["e.g. tomatoes","مثلًا: بندورة"],
+noSoilHere:["The soil map (SoilGrids) has no data for this spot, which is common next to towns and roads. Please choose your soil type yourself.","خريطة التربة (SoilGrids) لا تحتوي بيانات لهذا الموقع، وهذا شائع قرب المدن والطرق. الرجاء اختيار نوع التربة بنفسك."],
+chooseSoil:["Choose soil type","اختر نوع التربة"],dataUsed:["Data used ({n})","البيانات المستخدمة ({n})"],
 wantCrops:["What do you want to grow?","ماذا تريد أن تزرع؟"],
 wantPh:["Write the crops in your own words, e.g. tomatoes, grapes and olives","اكتب المحاصيل بكلماتك، مثلًا: بندورة، عنب وزيتون"],
 priority:["What matters most","الأولوية"],priWater:["Water","المياه"],priSoil:["Soil","التربة"],priCost:["Cost","التكلفة"],
@@ -567,7 +569,12 @@ function farmInputs() { return { polygon: OB.corners, soil: $("#fSoil").value, f
 async function runAnalysis() {
   OB.loading = true; OB.analysis = null; renderOnboard();
   try { OB.analysis = await api("/analyze", { method: "POST", body: farmInputs() }); OB.picks.clear(); OB.analysis.wanted.forEach(x => { if (x.crop && x.verdict !== "poor") OB.picks.add(x.crop); }); $("#ob3Err").hidden = true; }
-  catch (e) { $("#ob3Err").innerHTML = `${esc(e.message)} <button class="btn sm ghost" data-act="retryAnalyze" style="margin-top:8px">${t("retry")}</button>`; $("#ob3Err").hidden = false; }
+  catch (e) {
+    const soilErr = e.status === 422 || /soil/i.test(e.message);
+    $("#ob3Err").innerHTML = soilErr
+      ? `${esc(e.status === 422 && /not answering/.test(e.message) ? (LANG === "ar" ? "خدمة خريطة التربة (SoilGrids) لا تستجيب الآن. الرجاء اختيار نوع التربة بنفسك." : e.message) : t("noSoilHere"))} <button class="btn sm" data-act="pickSoil" style="margin-top:8px">${t("chooseSoil")}</button>`
+      : `${esc(e.message)} <button class="btn sm ghost" data-act="retryAnalyze" style="margin-top:8px">${t("retry")}</button>`;
+    $("#ob3Err").hidden = false; }
   OB.loading = false; renderOnboard();
 }
 function evalCard(x, checkable) {
@@ -943,6 +950,7 @@ document.addEventListener("click", async e => {
     case "obBack": if (OB.step === 1) { if (S.plots.length) enterMain(); else signOut(); } else { OB.step--; renderOnboard(); } break;
     case "obNext": if (OB.step === 1) { OB.step = 2; renderOnboard(); } else if (OB.step === 2) { if (validateStep2()) { OB.step = 3; renderOnboard(); runAnalysis(); } } else createPlot(); break;
     case "retryAnalyze": runAnalysis(); break;
+    case "pickSoil": OB.step = 2; $("#fSoil").value = ""; $("#ob3Err").hidden = true; renderOnboard(); fieldErr("#fSoilWrap", true); $("#fSoil").focus(); $("#fSoilWrap").scrollIntoView({ block: "center" }); break;
     case "closeSheet": closeSheet(); break;
     case "waitRain": closeSheet(); await guard(async () => { const id = +a.dataset.id; applyState(await api(`/plots/${S.plotId}/wait-rain`, { method: "POST", body: { tile_ids: [id] } })); floatAt(id, "☁", "#fff"); }); break;
     case "waterNow": irrigate(+a.dataset.id, +a.dataset.mm); break;

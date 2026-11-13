@@ -15,9 +15,12 @@ from . import worker
 from .api import router
 from .config import settings
 from .db import init_db
-from .http import UpstreamError, close_client
+from .http import InputNeeded, UpstreamError, close_client
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+# httpx logs full request URLs, which include API keys (e.g. OpenTopography). Keep them out of the log.
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 FRONTEND = Path(__file__).resolve().parents[2] / "frontend"
 
 
@@ -41,6 +44,11 @@ async def upstream_error(_req: Request, exc: UpstreamError):
     return JSONResponse(status_code=502, content={
         "detail": f"{exc.source} did not answer correctly: {exc.message}. Try again in a minute.",
         "source": exc.source})
+
+
+@app.exception_handler(InputNeeded)
+async def input_needed(_req: Request, exc: InputNeeded):
+    return JSONResponse(status_code=422, content={"detail": exc.message, "field": exc.field})
 
 
 app.include_router(router)
