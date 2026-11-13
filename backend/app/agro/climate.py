@@ -97,8 +97,12 @@ def perennial_score(crop: Crop, clim: dict) -> dict:
     score -= frost_weight(crop) * spring_frost
     if coldest_min < crop.winter_kill_c:
         score -= min(40, 10 * (crop.winter_kill_c - coldest_min))
+    coldest_mean = min(clim["T2M"][m] for m in MONTHS)
+    if crop.chill_month_max_c is not None and coldest_mean > crop.chill_month_max_c:
+        score -= min(60, 25 + 15 * (coldest_mean - crop.chill_month_max_c))
     rain = (clim["PRECTOTCORR"]["ANN"] or 0) * 365.25
     return {"mean_t": round(ann, 1), "frost_days": round(spring_frost, 1), "coldest_min": round(coldest_min, 1),
+            "coldest_mean": round(coldest_mean, 1),
             "rain_mm": round(rain), "score": max(0.0, min(100.0, score))}
 
 
@@ -205,8 +209,17 @@ def anomaly(daily: dict, clim: dict) -> dict | None:
             "anomaly_c": round(sum(obs) / len(obs) - sum(normal) / len(normal), 1)}
 
 
+AR_MONTHS = ["كانون الثاني", "شباط", "آذار", "نيسان", "أيار", "حزيران", "تموز", "آب", "أيلول", "تشرين الأول",
+             "تشرين الثاني", "كانون الأول"]
+
+
+def _r(kind: str, en: str, ar: str) -> dict:
+    """A reason: kind '+' helps, '-' hurts, 'i' is information."""
+    return {"kind": kind, "en": en, "ar": ar}
+
+
 def score_crop(crop: Crop, clim: dict, lat: float, ctx: dict) -> dict:
-    """Plot-level suitability 0–100 with bilingual reasons.
+    """Field-level suitability 0–100 with bilingual reasons and a verdict.
 
     ctx: soil_texture, farm_type, water_m3_week, area_m2, priority, prev_crops, trend
     """
@@ -214,18 +227,35 @@ def score_crop(crop: Crop, clim: dict, lat: float, ctx: dict) -> dict:
     if crop.perennial:
         ev = perennial_score(crop, clim)
         start = crop.season_start_month - 1
-        reasons.append({"en": f"Annual mean {ev['mean_t']} °C (best {crop.t_opt[0]:g}–{crop.t_opt[1]:g} °C)",
-                        "ar": f"متوسط سنوي {ev['mean_t']} °م (الأفضل {crop.t_opt[0]:g}–{crop.t_opt[1]:g} °م)"})
+        lo, hi = crop.t_opt
+        if ev["mean_t"] < lo or ev["mean_t"] > hi:
+            word = ("too warm", "حار جدًا") if ev["mean_t"] > hi else ("too cold", "بارد جدًا")
+            reasons.append(_r("-", f"Climate is {word[0]} for it: yearly mean {ev['mean_t']} °C (best {lo:g}–{hi:g} °C)",
+                              f"المناخ {word[1]} له: المتوسط السنوي {ev['mean_t']} °م (الأفضل {lo:g}–{hi:g} °م)"))
+        else:
+            reasons.append(_r("+", f"Yearly mean {ev['mean_t']} °C is in its best range ({lo:g}–{hi:g} °C)",
+                              f"المتوسط السنوي {ev['mean_t']} °م ضمن مداه الأفضل ({lo:g}–{hi:g} °م)"))
+        if crop.chill_month_max_c is not None and ev["coldest_mean"] > crop.chill_month_max_c:
+            reasons.append(_r("-", f"Winters are too warm for it to rest and fruit (coldest month {ev['coldest_mean']} °C; it needs {crop.chill_month_max_c:g} °C or colder)",
+                              f"الشتاء دافئ جدًا ليرتاح ويثمر (أبرد شهر {ev['coldest_mean']} °م؛ يحتاج {crop.chill_month_max_c:g} °م أو أبرد)"))
+        if ev["coldest_min"] < crop.winter_kill_c:
+            reasons.append(_r("-", f"Winter lows reach {ev['coldest_min']} °C; it is damaged below {crop.winter_kill_c:g} °C",
+                              f"تصل الصغرى شتاءً إلى {ev['coldest_min']} °م؛ يتضرر تحت {crop.winter_kill_c:g} °م"))
     else:
         evs = [evaluate_start(crop, clim, m) for m in range(12)]
         ev = max(evs, key=lambda e: e["score"])
         start = ev["start"]
-        reasons.append({"en": f"Best planting month: {MONTHS[start].title()} (season mean {ev['mean_t']} °C)",
-                        "ar": f"أفضل شهر للزراعة: {start + 1} (متوسط الموسم {ev['mean_t']} °م)"})
+        lo, hi = crop.t_opt
+        if ev["score"] >= 60:
+            reasons.append(_r("+", f"Best planting month here: {MONTHS[start].title()} (season mean {ev['mean_t']} °C)",
+                              f"أفضل شهر للزراعة هنا: {AR_MONTHS[start]} (متوسط الموسم {ev['mean_t']} °م)"))
+        else:
+            reasons.append(_r("-", f"No month gives it the temperatures it needs ({lo:g}–{hi:g} °C); best is {MONTHS[start].title()} at {ev['mean_t']} °C",
+                              f"لا يوجد شهر يعطيه الحرارة التي يحتاجها ({lo:g}–{hi:g} °م)؛ الأفضل {AR_MONTHS[start]} بمتوسط {ev['mean_t']} °م"))
     score = ev["score"]
     if ev["frost_days"] >= 0.5 and frost_weight(crop) > 0:
-        reasons.append({"en": f"{ev['frost_days']:g} frost days in its sensitive period",
-                        "ar": f"{ev['frost_days']:g} أيام صقيع في فترة حساسيته"})
+        reasons.append(_r("-", f"{ev['frost_days']:g} frost days in its sensitive period",
+                          f"{ev['frost_days']:g} أيام صقيع في فترة حساسيته"))
     need_mm, peak_week_mm = season_need_mm(crop, clim, lat, start)
     area = ctx.get("area_m2") or 0
     water = ctx.get("water_m3_week") or 0
@@ -233,37 +263,59 @@ def score_crop(crop: Crop, clim: dict, lat: float, ctx: dict) -> dict:
     if farm_type == "rain":
         if crop.rain_min_mm <= 0:
             score = min(score, 15)
-            reasons.append({"en": "Needs irrigation; not viable rain-fed", "ar": "يحتاج ري؛ لا يصلح بعليًا"})
+            reasons.append(_r("-", "Needs irrigation: it cannot grow on rain alone here", "يحتاج ري: لا ينمو على المطر وحده هنا"))
         elif ev["rain_mm"] < crop.rain_min_mm:
             score -= min(40, 40 * (1 - ev["rain_mm"] / crop.rain_min_mm))
-            reasons.append({"en": f"Season rain {ev['rain_mm']} mm, needs about {crop.rain_min_mm:g} mm",
-                            "ar": f"أمطار الموسم {ev['rain_mm']} ملم، يحتاج حوالي {crop.rain_min_mm:g} ملم"})
+            reasons.append(_r("-", f"Season rain is {ev['rain_mm']} mm; it needs about {crop.rain_min_mm:g} mm",
+                              f"أمطار الموسم {ev['rain_mm']} ملم؛ يحتاج حوالي {crop.rain_min_mm:g} ملم"))
+        else:
+            reasons.append(_r("+", f"Season rain ({ev['rain_mm']} mm) is enough to grow it rain-fed",
+                              f"أمطار الموسم ({ev['rain_mm']} ملم) تكفي لزراعته بعليًا"))
     else:
         peak_m3 = peak_week_mm * area / 1000
         if water and area and peak_m3 > water:
             score -= min(30, 30 * (peak_m3 / water - 1))
-            reasons.append({"en": f"Peak need {peak_m3:,.0f} m³/week if grown on the whole plot; you have {water:,.0f}",
-                            "ar": f"الحاجة القصوى {peak_m3:,.0f} م³/أسبوع إذا زُرعت كل القطعة؛ المتاح {water:,.0f}"})
-        reasons.append({"en": f"Irrigation need ≈ {need_mm:,.0f} mm per season", "ar": f"حاجة الري ≈ {need_mm:,.0f} ملم للموسم"})
+            reasons.append(_r("-", f"At its peak it needs {peak_m3:,.0f} m³/week on the whole field; you have {water:,.0f}",
+                              f"في ذروته يحتاج {peak_m3:,.0f} م³/أسبوع لكامل الأرض؛ المتاح {water:,.0f}"))
+        reasons.append(_r("i", f"Irrigation need ≈ {need_mm:,.0f} mm per season", f"حاجة الري ≈ {need_mm:,.0f} ملم للموسم"))
     grp = soilmod.group(ctx.get("soil_texture", "loam"))
     if grp in crop.soils_poor:
         score -= 15
-        reasons.append({"en": f"Performs poorly on {grp} soils", "ar": "أداؤه ضعيف في هذا النوع من التربة"})
+        names = {"sand": ("sandy", "الرملية"), "clay": ("heavy clay", "الطينية الثقيلة"), "loam": ("loam", "الطميية")}[grp]
+        reasons.append(_r("-", f"Grows poorly in {names[0]} soil", f"ينمو بشكل ضعيف في التربة {names[1]}"))
     pr = ctx.get("priority")
     if pr == "water":
         score += 6 if crop.drought_tolerant else -4
-    if pr == "soil" and crop.id in ("chickpea", "lentil"):
-        score += 8
-        reasons.append({"en": "Legume: adds nitrogen to the soil", "ar": "بقولي: يضيف النيتروجين للتربة"})
+    if crop.id in ("chickpea", "lentil", "faba", "beans"):
+        if pr == "soil":
+            score += 8
+        reasons.append(_r("+", "Legume: adds nitrogen to the soil", "بقولي: يضيف النيتروجين للتربة"))
     if not crop.perennial and crop.id in (ctx.get("prev_crops") or []):
         score -= 10
-        reasons.append({"en": "Grown here last season: rotate to cut pests and disease", "ar": "زُرع هنا الموسم الماضي: بدّل المحصول لتقليل الآفات والأمراض"})
+        reasons.append(_r("-", "Grown here last season: rotate to cut pests and disease", "زُرع هنا الموسم الماضي: بدّل المحصول لتقليل الآفات والأمراض"))
     tr = ctx.get("trend") or {}
-    if crop.drought_tolerant and (tr.get("rain_pct_per_decade", 0) <= -5 or tr.get("temp_c_per_decade", 0) >= 0.3):
-        score += 5
-        reasons.append({"en": "Drought-tolerant: suits the drying/warming trend", "ar": "يتحمل الجفاف: يناسب اتجاه الجفاف والاحترار"})
-    return {"crop": crop.id, "score": round(max(0.0, min(100.0, score))), "start_month": start + 1,
-            "season_need_mm": round(need_mm), "peak_week_mm": round(peak_week_mm, 1), "reasons": reasons}
+    if crop.drought_tolerant:
+        if tr.get("rain_pct_per_decade", 0) <= -5 or tr.get("temp_c_per_decade", 0) >= 0.3:
+            score += 5
+        reasons.append(_r("+", "Drought-tolerant: copes with dry years", "يتحمل الجفاف: يصمد في السنوات الجافة"))
+    score = round(max(0.0, min(100.0, score)))
+    return {"crop": crop.id, "score": score, "start_month": start + 1, "season_need_mm": round(need_mm),
+            "peak_week_mm": round(peak_week_mm, 1), "reasons": reasons, **verdict(score, reasons)}
+
+
+def verdict(score: int, reasons: list[dict]) -> dict:
+    bad = next((r for r in reasons if r.get("kind") == "-"), None)
+    good = next((r for r in reasons if r.get("kind") == "+"), None)
+    if score >= 75:
+        v = "good"
+        summary = {"en": "Useful here. " + (good["en"] + "." if good else ""), "ar": "مفيد هنا. " + (good["ar"] + "." if good else "")}
+    elif score >= 55:
+        v = "ok"
+        summary = {"en": "Can work, with care. " + (bad["en"] + "." if bad else ""), "ar": "ممكن مع بعض الحذر. " + (bad["ar"] + "." if bad else "")}
+    else:
+        v = "poor"
+        summary = {"en": "Not recommended here. " + (bad["en"] + "." if bad else ""), "ar": "غير منصوح به هنا. " + (bad["ar"] + "." if bad else "")}
+    return {"verdict": v, "summary": {k: x.strip() for k, x in summary.items()}}
 
 
 def rank(clim: dict, lat: float, ctx: dict) -> list[dict]:

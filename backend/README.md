@@ -32,6 +32,7 @@ poller runs inside the process. Back up `farmstudio.db`, or set `DATABASE_URL` t
 
 | Feature | Data | Method (`app/agro/…`) |
 |---|---|---|
+| Field squares | The drawn boundary | `geo.py`: about 40 near-square squares over the field; each square's area is the part inside the boundary |
 | Crop suitability and best planting month | NASA POWER 2001–2025 climatology, farmer's water and soil | `climate.py`: FAO ECOCROP temperature ranges, frost days, seasonal irrigation need from Hargreaves ET0 and FAO-56 Kc |
 | Climate trend and “plant drought-tolerant crops” advice | NASA POWER monthly series | Linear trend of annual rain and temperature per decade |
 | Late or early season advice | NASA POWER daily (last 30 days) vs climatology | Temperature anomaly |
@@ -55,10 +56,13 @@ All routes except `/api/health`, `/api/crops`, `/api/soils` and `/api/auth/*` ne
 |---|---|---|
 | POST | `/api/auth/register`, `/api/auth/login` | Create account / sign in → token |
 | GET, PATCH | `/api/me` | Profile, language |
-| POST | `/api/analyze` | Land profile and ranked crops for a drawn field |
+| POST | `/api/analyze` | Land profile, square size, and a verdict for each crop the farmer typed |
 | GET, POST | `/api/plots` | List / create plots |
 | GET, PATCH, DELETE | `/api/plots/{id}` | Full live state of a plot (squares, water, harvest, weather, alerts) |
-| POST | `/api/plots/{id}/plant` · `/irrigate` · `/wait-rain` · `/harvest` | Farmer actions; award Resilience Points |
+| POST | `/api/plots/{id}/plant` · `/irrigate` · `/wait-rain` · `/harvest` · `/clear` | Farmer actions on squares (harvest only accepts ripe squares) |
+| POST | `/api/plots/{id}/evaluate` | Judge crops the farmer types for an existing field |
+| GET | `/api/crops/match?text=` | Turn typed crop names (English/Arabic) into crop ids |
+| GET | `/api/geo/search?q=` | Find towns and villages in Jordan (OpenStreetMap Nominatim) |
 | GET, POST | `/api/plots/{id}/spray-window` · `/spray` | 3-day spray windows, booking (red slots refused) |
 | GET, POST | `/api/plots/{id}/alerts` · `/alerts/act` | 7-day weather risks and the steps taken |
 | GET | `/api/plots/{id}/plan` | Calendar, weekly water, grade, trend, suggestions, NDVI/SMAP series |

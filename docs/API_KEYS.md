@@ -6,11 +6,12 @@ Farm Studio uses seven outside services. Three need something from you; the othe
 |---|---------|------------------------------|-------------|-----------------|
 | 1 | **NASA Earthdata Login → AppEEARS** | SMAP root-zone soil moisture, MODIS NDVI (crop health), ECOSTRESS night surface temperature (cold spots) for every square of the field | **Yes** (free account) | `EARTHDATA_USERNAME`, `EARTHDATA_PASSWORD` |
 | 2 | **OpenTopography** (NASA SRTM GL1, 30 m) | Elevation and slope of each square, low spots for frost and flooding | **Yes** (free key) | `OPENTOPOGRAPHY_API_KEY` |
-| 3 | **OpenStreetMap Nominatim** | Turns coordinates into a village / district name | Contact e-mail only | `NOMINATIM_EMAIL` |
+| 3 | **OpenStreetMap Nominatim** | Place search on the map (Jordan only) and village / district names | No (a contact e-mail is recommended) | `NOMINATIM_EMAIL` |
 | 4 | NASA POWER | 25-year climate, monthly trends, recent daily weather | No | – |
 | 5 | Open-Meteo | 10-day forecast, ET0 for the water balance, hourly wind for spraying | No (non-commercial) | `OPEN_METEO_API_KEY` only for commercial use |
 | 6 | ISRIC SoilGrids | Soil texture when the farmer chooses “Not sure” | No | – |
-| 7 | OpenStreetMap tiles | The map used to draw the field | No | – |
+| 7 | OpenStreetMap tiles | Street map used to draw the field | No | – |
+| 8 | Esri World Imagery | Satellite photos so farmers can see their field edges | No (see note in step 3) | – |
 
 You also need to make one secret yourself: `SECRET_KEY` (step 0).
 
@@ -59,15 +60,17 @@ Free keys allow a limited number of requests per day. Farm Studio calls OpenTopo
 
 ---
 
-## Step 3: Nominatim contact e-mail
+## Step 3: Nominatim contact e-mail (recommended) and map imagery
 
-No account is needed. Nominatim's usage policy (https://operations.osmfoundation.org/policies/nominatim/) asks every app to identify itself with a contact address, and allows at most 1 request per second. Farm Studio caches every answer for 90 days.
+No account is needed. Place search works without a key; Nominatim's usage policy (https://operations.osmfoundation.org/policies/nominatim/) asks apps to identify themselves and to send at most 1 request per second. The server already limits itself to 1 request per second and caches answers (searches 30 days, place names 90 days). Adding a contact e-mail is good practice:
 
 ```
 NOMINATIM_EMAIL=team@your-domain.org
 ```
 
 ---
+
+The satellite layer on the field map uses Esri World Imagery tiles, which need no key for light, non-commercial use with the attribution shown on the map. For a large public launch, check Esri's terms or switch the layer URL in `frontend/app.js` (`initMap`) to an imagery provider you have an account with.
 
 ## Step 4 (only for commercial use): Open-Meteo
 

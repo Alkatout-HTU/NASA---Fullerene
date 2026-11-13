@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .agro import alerts as alertmod
-from .agro import climate, game, geo, phenology, spray, water
+from .agro import climate, game, geo, matching, phenology, spray, water
 from .agro import soil as soilmod
 from .agro.crops import CROPS
 from .db import Event, Planting, Plot, Tile, jdump, jload
@@ -43,7 +43,7 @@ async def _none():
 # ---------------------------------------------------------------- analysis (onboarding step 3)
 async def analyze(lat: float, lon: float, polygon: list[list[float]] | None, area_m2: float, soil_choice: str,
                   farm_type: str, water_m3_week: float, priority: str, prev_crops: list[str],
-                  keep_crops: list[str], lang: str) -> dict:
+                  keep_crops: list[str], lang: str, wanted_text: str = "") -> dict:
     year = dt.date.today().year
     today = dt.date.today()
     clim_t = power.climatology(lat, lon)
@@ -83,9 +83,7 @@ async def analyze(lat: float, lon: float, polygon: list[list[float]] | None, are
         raise UpstreamError("SoilGrids", (se.message if se else "") + " — choose the soil type yourself and try again")
     ctx = {"soil_texture": texture, "farm_type": farm_type, "water_m3_week": water_m3_week, "area_m2": area_m2,
            "priority": priority, "prev_crops": prev_crops, "trend": tr}
-    ranked = climate.rank(clim_v, lat, ctx)
-    for r in ranked:
-        r["keep"] = r["crop"] in keep_crops
+    wanted = evaluate_wanted(wanted_text, clim_v, lat, ctx, keep_crops)
     region = await geocode.place_name(lat, lon, lang)
     valid_e = [e for e in (elevs or []) if e is not None]
     profile = {
@@ -103,11 +101,44 @@ async def analyze(lat: float, lon: float, polygon: list[list[float]] | None, are
         "trend": tr, "anomaly": anom,
     }
     sources.append(_src("Elevation", elevs is not None, None, elev_src))
-    return {"profile": profile, "crops": ranked, "sources": sources, "polygon": poly}
+    cells = geo.grid(poly)
+    cols, rows, cw, ch = grid_meta(poly, cells)
+    inside = [c for c in cells if c["inside"]]
+    grid = {"cols": cols, "rows": rows, "square_w_m": round(cw, 1), "square_h_m": round(ch, 1),
+            "squares": len(inside), "square_area_m2": round(cw * ch), "edges_m": geo.edge_lengths_m(poly)}
+    return {"profile": profile, "wanted": wanted, "grid": grid, "sources": sources, "polygon": poly,
+            "_cells": cells, "_elev": (elevs, slopes, elev_src)}
+
+
+def grid_meta(poly: list[list[float]], cells: list[dict]) -> tuple[int, int, float, float]:
+    cols = max(c["c"] for c in cells) + 1
+    rows = max(c["r"] for c in cells) + 1
+    s, n, w, e = geo.bbox(poly)
+    lat0 = (s + n) / 2
+    return cols, rows, (e - w) * geo.m_per_deg_lon(lat0) / cols, (n - s) * geo.M_PER_DEG_LAT / rows
+
+
+def evaluate_wanted(text: str, clim: dict, lat: float, ctx: dict, extra: list[str] | None = None) -> list[dict]:
+    """What the farmer typed, matched to crops and judged for this field."""
+    items = matching.parse(text or "")
+    known = {i["crop"] for i in items if i["crop"]}
+    for c in extra or []:
+        if c not in known:
+            items.append({"text": CROPS[c].en, "crop": c})
+            known.add(c)
+    out = []
+    for it in items:
+        if not it["crop"]:
+            out.append({"text": it["text"], "crop": None, "verdict": "unknown",
+                        "summary": {"en": f"“{it['text']}” is not in our crop list yet, so we cannot judge it.",
+                                    "ar": f"«{it['text']}» غير موجود في قائمة المحاصيل بعد، لذلك لا نستطيع تقييمه."}})
+            continue
+        out.append({"text": it["text"], **climate.score_crop(CROPS[it["crop"]], clim, lat, ctx)})
+    return out
 
 
 async def _try_elev(poly):
-    cells = geo.grid(poly, 6)
+    cells = geo.grid(poly)
     pts = [(c["lat"], c["lon"]) for c in cells]
     try:
         e, s, label = await elevation.tile_elevations(pts, geo.bbox(poly))
@@ -125,10 +156,10 @@ async def create_plot(db: Session, user_id: int, data: dict) -> Plot:
     analysis = await analyze(lat, lon, poly, area, data["soil"], data["farm_type"], data["water_m3_week"],
                              data["priority"], data["prev_crops"], data["keep_crops"], data.get("lang", "en"))
     prof = analysis["profile"]
-    cells = geo.grid(poly, 6)
-    elevs, slopes, elev_src = await _try_elev(poly)
-    inside = [c for c in cells if c["inside"]]
-    tile_area = area / max(1, len(inside))
+    cells = analysis["_cells"]
+    elevs, slopes, elev_src = analysis["_elev"]
+    if elevs is None:  # try once more; elevation services sometimes drop a request
+        elevs, slopes, elev_src = await _try_elev(poly)
     plot = Plot(user_id=user_id, name=data["name"], region=prof["region"], lat=lat, lon=lon, polygon=jdump(poly),
                 area_m2=area, soil_class=prof["soil_texture"], soil_source=prof["soil_source"],
                 soil=jdump(prof["soil"] or {}), farm_type=data["farm_type"], water_m3_week=data["water_m3_week"],
@@ -144,7 +175,7 @@ async def create_plot(db: Session, user_id: int, data: dict) -> Plot:
     for i, c in enumerate(cells):
         e = elevs[i] if elevs else None
         db.add(Tile(plot_id=plot.id, c=c["c"], r=c["r"], lat=c["lat"], lon=c["lon"], inside=c["inside"],
-                    area_m2=tile_area if c["inside"] else 0, elev=e, slope_pct=slopes[i] if slopes else None,
+                    area_m2=c["area_m2"], elev=e, slope_pct=slopes[i] if slopes else None,
                     low=bool(c["inside"] and lo_cut is not None and e is not None and e <= lo_cut)))
     db.commit()
     db.refresh(plot)
@@ -231,6 +262,10 @@ async def plot_state(db: Session, plot: Plot) -> dict:
     irrigation = _irrigation_by_tile(db, plot.id)
     waiting = _waiting_tiles(db, plot.id, today)
     obs = _obs_temps(ctx)
+    last_harvest: dict[int, dt.date] = {}
+    for ev in db.scalars(select(Event).where(Event.plot_id == plot.id, Event.kind == "harvest")):
+        if ev.tile_id and (ev.tile_id not in last_harvest or ev.on_date > last_harvest[ev.tile_id]):
+            last_harvest[ev.tile_id] = ev.on_date
     scores = base_scores(plot, ctx["clim"])
     theta_cache: dict[str, float | None] = {}
     tiles_out = []
@@ -243,7 +278,7 @@ async def plot_state(db: Session, plot: Plot) -> dict:
         if planting:
             crop = CROPS[planting.crop]
             active_crops.append(crop.id)
-            ph = phenology.status(crop, planting.planted_on, today, obs, clim)
+            ph = phenology.status(crop, planting.planted_on, today, obs, clim, last_harvest.get(t.id))
             wb = None
             if fc:
                 start = max(planting.planted_on, dt.date.fromisoformat(fc["days"][0]["date"]))
@@ -304,7 +339,18 @@ def _sources(ctx: dict, plot: Plot, sat: dict) -> list[dict]:
 
 
 def plot_summary(plot: Plot) -> dict:
-    return {"id": plot.id, "name": plot.name, "region": plot.region, "lat": plot.lat, "lon": plot.lon,
+    poly = jload(plot.polygon, [])
+    tiles = plot.tiles
+    cols = max((t.c for t in tiles), default=5) + 1
+    rows = max((t.r for t in tiles), default=5) + 1
+    s, n, w, e = geo.bbox(poly)
+    lat0 = (s + n) / 2
+    cw = (e - w) * geo.m_per_deg_lon(lat0) / cols
+    ch = (n - s) * geo.M_PER_DEG_LAT / rows
+    grid = {"cols": cols, "rows": rows, "square_w_m": round(cw, 1), "square_h_m": round(ch, 1),
+            "square_area_m2": round(cw * ch), "squares": sum(1 for t in tiles if t.inside),
+            "outline": geo.outline_in_grid(poly, cols, rows), "edges_m": geo.edge_lengths_m(poly)}
+    return {"grid": grid, "id": plot.id, "name": plot.name, "region": plot.region, "lat": plot.lat, "lon": plot.lon,
             "polygon": jload(plot.polygon, []), "area_m2": round(plot.area_m2), "soil_class": plot.soil_class,
             "soil_name": soilmod.NAMES[plot.soil_class], "soil_source": plot.soil_source, "farm_type": plot.farm_type,
             "water_m3_week": plot.water_m3_week, "budget_jod": plot.budget_jod, "priority": plot.priority,

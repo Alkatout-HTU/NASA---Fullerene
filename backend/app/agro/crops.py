@@ -34,6 +34,7 @@ class Crop:
     harvest_window: tuple[str, str] | None = None  # perennials: ("MM-DD", "MM-DD")
     winter_kill_c: float = -30.0            # perennials: winter minimum that damages wood / trees
     deciduous: bool = False                 # loses leaves after the season: no irrigation while dormant
+    chill_month_max_c: float | None = None  # winter chilling: coldest-month mean must be at or below this
     gdd_base: float | None = None           # growing degree day model (base °C)
     gdd_harvest: float | None = None        # GDD from season start to harvest
     shape: str = "bush"                     # sprite family for the game view
@@ -95,6 +96,48 @@ CROPS: dict[str, Crop] = {c.id: c for c in [
     Crop("citrus", "Citrus", "حمضيات", True, (0.7, 0.65, 0.7), (60, 90, 120, 95), 1.2, 0.50, (18, 28), (13, 35), -2.0,
          False, 0, ("clay",), season_start_month=2, winter_kill_c=-3.0, harvest_window=("11-15", "03-15"), shape="tree", color="#F08A1C",
          frost_actions=_FROST_TREE),
+    # ---- added vegetables (FAO-56 Tables 11/12, Mediterranean rows) ----
+    Crop("squash", "Squash (kousa)", "كوسا", False, (0.5, 0.95, 0.75), (25, 35, 25, 15), 0.8, 0.50, (18, 27), (10, 35), 1.0,
+         False, 0, ("clay",), shape="vine", color="#5E8C2E", frost_actions=_FROST_ANNUAL),
+    Crop("cabbage", "Cabbage", "ملفوف", False, (0.7, 1.05, 0.95), (30, 35, 40, 15), 0.6, 0.45, (15, 20), (5, 28), -4.0,
+         False, 0, (), shape="head", color="#9CCB6A"),
+    Crop("cauliflower", "Cauliflower", "زهرة", False, (0.7, 1.05, 0.95), (35, 50, 40, 15), 0.6, 0.45, (15, 22), (5, 28), -2.0,
+         False, 0, (), shape="head", color="#F2EBD3", frost_actions=_FROST_ANNUAL),
+    Crop("lettuce", "Lettuce", "خس", False, (0.7, 1.0, 0.95), (20, 30, 15, 10), 0.4, 0.30, (12, 20), (5, 27), -2.0,
+         False, 0, (), shape="head", color="#8FD16A", frost_actions=_FROST_ANNUAL),
+    Crop("beans", "Green beans", "فاصوليا", False, (0.5, 1.05, 0.9), (20, 30, 30, 10), 0.6, 0.45, (18, 26), (10, 32), 1.0,
+         False, 0, ("clay",), shape="bush", color="#3F8A3A", frost_actions=_FROST_ANNUAL),
+    Crop("faba", "Broad beans", "فول", False, (0.5, 1.15, 1.1), (20, 30, 40, 20), 0.7, 0.45, (12, 20), (4, 28), -4.0,
+         False, 350, (), shape="bush", color="#6B8E3A"),
+    Crop("okra", "Okra", "بامية", False, (0.5, 1.0, 0.85), (25, 35, 40, 20), 0.7, 0.45, (22, 32), (15, 38), 3.0,
+         True, 0, (), shape="bush", color="#4E8E2E", frost_actions=_FROST_ANNUAL),
+    Crop("garlic", "Garlic", "ثوم", False, (0.7, 1.0, 0.7), (20, 30, 70, 30), 0.4, 0.30, (12, 24), (4, 30), -6.0,
+         False, 0, ("clay",), shape="stalk", color="#E8E1D0"),
+    Crop("carrot", "Carrots", "جزر", False, (0.7, 1.05, 0.95), (20, 30, 40, 20), 0.7, 0.35, (15, 21), (5, 28), -3.0,
+         False, 0, ("clay",), shape="leafy", color="#E8822A"),
+    Crop("spinach", "Spinach", "سبانخ", False, (0.7, 1.0, 0.95), (20, 20, 15, 5), 0.4, 0.20, (12, 20), (4, 26), -5.0,
+         False, 0, (), shape="head", color="#2F6B2A"),
+    Crop("strawberry", "Strawberries", "فراولة", False, (0.4, 0.85, 0.75), (20, 40, 60, 30), 0.3, 0.20, (15, 24), (5, 30), -1.0,
+         False, 0, ("clay",), shape="bush", color="#D9412B", frost_actions=_FROST_ANNUAL),
+    # ---- added fruit trees ----
+    Crop("pomegranate", "Pomegranate", "رمان", True, (0.5, 0.8, 0.6), (30, 60, 120, 90), 1.2, 0.50, (15, 25), (10, 30), -2.0,
+         True, 0, (), season_start_month=3, winter_kill_c=-12.0, deciduous=True, harvest_window=("09-15", "11-15"),
+         shape="tree", color="#C0392B", frost_actions=_FROST_TREE),
+    Crop("fig", "Figs", "تين", True, (0.4, 0.85, 0.65), (30, 60, 120, 90), 1.2, 0.50, (15, 26), (10, 30), -2.0,
+         True, 250, (), season_start_month=3, winter_kill_c=-10.0, deciduous=True, harvest_window=("07-01", "09-30"),
+         shape="tree", color="#5B3A6B", frost_actions=_FROST_TREE),
+    Crop("almond", "Almonds", "لوز", True, (0.4, 0.9, 0.65), (30, 60, 120, 90), 1.5, 0.40, (14, 24), (9, 28), -1.0,
+         True, 300, ("clay",), season_start_month=2, winter_kill_c=-15.0, deciduous=True, chill_month_max_c=12.0, harvest_window=("08-01", "09-30"),
+         shape="tree", color="#C8A27A", frost_actions=_FROST_TREE),
+    Crop("apple", "Apples", "تفاح", True, (0.45, 0.95, 0.7), (30, 60, 120, 90), 1.2, 0.50, (8, 18), (4, 24), -2.0,
+         False, 0, (), season_start_month=3, winter_kill_c=-25.0, deciduous=True, chill_month_max_c=7.0, harvest_window=("08-15", "10-31"),
+         shape="tree", color="#C0392B", frost_actions=_FROST_TREE),
+    Crop("stonefruit", "Peaches & apricots", "دراق ومشمش", True, (0.45, 0.9, 0.65), (30, 60, 120, 90), 1.2, 0.50, (12, 20), (7, 26), -2.0,
+         False, 0, ("clay",), season_start_month=3, winter_kill_c=-20.0, deciduous=True, chill_month_max_c=10.0, harvest_window=("05-15", "07-31"),
+         shape="tree", color="#F4A340", frost_actions=_FROST_TREE),
+    Crop("banana", "Bananas", "موز", True, (0.5, 1.1, 1.0), (60, 90, 120, 95), 0.7, 0.35, (22, 30), (16, 35), 2.0,
+         False, 0, (), season_start_month=2, winter_kill_c=-2.0, harvest_window=("09-01", "12-31"),
+         shape="banana", color="#F2D23C", frost_actions=_FROST_TREE),
 ]}
 
 ACTIVE_CROPS = list(CROPS)
