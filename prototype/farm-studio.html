@@ -1,0 +1,913 @@
+<title>Farm Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one phone-width app column (centered on desktop) — HUD on top, isometric farm stage, tab bar at the bottom; sheets slide up over it. */
+:root{
+  --bg:#E7EBDA; --surface:#FBFAF3; --surface-2:#F1F0E3; --line:#D6D9C4;
+  --ink:#1E2819; --muted:#5D6853;
+  --olive:#47672A; --olive-ink:#FFFFFF; --leaf:#77A53F;
+  --sun:#D98E1F; --sun-soft:#FBE7C2;
+  --water:#2F7FB5; --water-soft:#D6E9F5;
+  --frost:#4FA3E0; --danger:#C2412B; --danger-soft:#F6DCD5; --warn:#C99512; --warn-soft:#F7ECC8; --ok:#3F8A3A; --ok-soft:#DCEED6;
+  --sky-top:#BFE0F0; --sky-bot:#EAF3E3;
+  --grass:#83B24A; --grass-dk:#5E8A33; --soil:#A9774A; --soil-dk:#7A5131; --soil-wet:#6E4A2C;
+  --shadow:0 6px 20px rgba(40,50,20,.14);
+  --f-display:"Baloo Bhaijaan 2","Trebuchet MS",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans Arabic","Segoe UI",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#10150D; --surface:#1B2317; --surface-2:#232D1E; --line:#33402B;
+  --ink:#E9EFDE; --muted:#A0AD93;
+  --olive:#9CC65C; --olive-ink:#13200A; --leaf:#8DBD52;
+  --sun:#F0AE45; --sun-soft:#3B2E14;
+  --water:#6AB4E6; --water-soft:#16303F;
+  --frost:#7CC0F0; --danger:#F07A63; --danger-soft:#3D1D17; --warn:#E8C04A; --warn-soft:#3A3215; --ok:#7CC473; --ok-soft:#1C3319;
+  --sky-top:#1C3346; --sky-bot:#22301F;
+  --grass:#5F8C33; --grass-dk:#40651F; --soil:#8A5F3A; --soil-dk:#5C3E24; --soil-wet:#4F3420;
+  --shadow:0 6px 20px rgba(0,0,0,.4); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10150D; --surface:#1B2317; --surface-2:#232D1E; --line:#33402B;
+  --ink:#E9EFDE; --muted:#A0AD93;
+  --olive:#9CC65C; --olive-ink:#13200A; --leaf:#8DBD52;
+  --sun:#F0AE45; --sun-soft:#3B2E14;
+  --water:#6AB4E6; --water-soft:#16303F;
+  --frost:#7CC0F0; --danger:#F07A63; --danger-soft:#3D1D17; --warn:#E8C04A; --warn-soft:#3A3215; --ok:#7CC473; --ok-soft:#1C3319;
+  --sky-top:#1C3346; --sky-bot:#22301F;
+  --grass:#5F8C33; --grass-dk:#40651F; --soil:#8A5F3A; --soil-dk:#5C3E24; --soil-wet:#4F3420;
+  --shadow:0 6px 20px rgba(0,0,0,.4); color-scheme:dark}
+
+html,body{height:100%}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;overflow:hidden}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+h1,h2,h3{font-family:var(--f-display);font-weight:800;line-height:1.1;margin:0;text-wrap:balance}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate}
+.app{position:relative;height:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column;background:var(--surface);overflow:hidden}
+@media (min-width:600px){.app{border-left:1px solid var(--line);border-right:1px solid var(--line);box-shadow:var(--shadow)}}
+.screen{flex:1;display:flex;flex-direction:column;min-height:0}
+.pad{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.scroll{flex:1;overflow-y:auto;min-height:0;padding-block:16px 24px}
+
+/* buttons & chips */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:14px;padding:12px 18px;font-family:var(--f-display);font-weight:700;font-size:17px;background:var(--olive);color:var(--olive-ink);box-shadow:0 3px 0 rgba(0,0,0,.18)}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.18)}
+.btn.ghost{background:var(--surface-2);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.btn.sun{background:var(--sun);color:#2A1A00}
+.btn.water{background:var(--water);color:#fff}
+.btn.block{width:100%}
+.btn.sm{font-size:14px;padding:8px 12px;border-radius:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;font-size:13px;font-weight:600;background:var(--surface-2);border:1px solid var(--line);white-space:nowrap}
+.chip.toggle[aria-pressed="true"]{background:var(--olive);color:var(--olive-ink);border-color:transparent}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.label{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+:root[dir="rtl"] .label{letter-spacing:0;text-transform:none;font-size:13px}
+.muted{color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px}
+.stack{display:flex;flex-direction:column;gap:14px}
+.row{display:flex;align-items:center;gap:10px}
+.between{justify-content:space-between}
+.tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--surface-2);color:var(--muted);border:1px dashed var(--line)}
+
+/* welcome */
+.welcome{position:relative;flex:1;display:flex;flex-direction:column;background:linear-gradient(var(--sky-top),var(--sky-bot))}
+.welcome canvas{flex:1;width:100%;min-height:0;display:block}
+.welcome .panel{background:var(--surface);border-radius:24px 24px 0 0;padding-block:22px 22px;box-shadow:0 -8px 24px rgba(0,0,0,.08)}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:42px;height:42px;border-radius:12px;background:var(--olive);display:grid;place-items:center}
+.logo h1{font-size:34px;letter-spacing:-.01em}
+.welcome p{margin:6px 0 16px;color:var(--muted);max-width:40ch}
+.lang-switch{position:absolute;top:12px;right:max(12px,env(safe-area-inset-right,0px));z-index:2}
+
+/* onboarding */
+.ob-head{padding-block:14px 10px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.steps i{height:5px;border-radius:5px;background:var(--line)}
+.steps i.on{background:var(--olive)}
+.ob-foot{padding-block:12px;border-top:1px solid var(--line);display:flex;gap:10px;background:var(--surface)}
+.ob-foot .btn{flex:1}
+.map-wrap{position:relative;border-radius:18px;overflow:hidden;border:1px solid var(--line);touch-action:none}
+.map-wrap canvas{display:block;width:100%;height:280px}
+.map-coords{position:absolute;left:8px;bottom:8px;background:var(--surface);border-radius:8px;padding:3px 8px;font-size:12px;border:1px solid var(--line)}
+.map-loc{position:absolute;right:8px;top:8px}
+input[type=range]{width:100%;accent-color:var(--olive)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field input,.field select{font:inherit;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);width:100%}
+.field .err{color:var(--danger);font-size:13px}
+.field.bad input,.field.bad select{border-color:var(--danger)}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px}
+.seg button{border:0;background:transparent;border-radius:9px;padding:8px 6px;font-weight:600;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.15);color:var(--olive)}
+.src-list{display:flex;flex-direction:column;gap:8px}
+.src{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:var(--surface-2)}
+.src .dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--line)}
+.src.loading .dot{border-color:var(--water);border-top-color:transparent;animation:spin .8s linear infinite}
+.src.done .dot{background:var(--ok);border-color:var(--ok)}
+.src small{display:block;color:var(--muted);font-size:12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.profile{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.metric{background:var(--surface-2);border-radius:14px;padding:10px 12px}
+.metric b{display:block;font-family:var(--f-display);font-size:22px;line-height:1.1}
+.metric span{font-size:12px;color:var(--muted)}
+.rec{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;padding:10px;border-radius:14px;border:1px solid var(--line)}
+.rec[aria-pressed="true"]{border-color:var(--olive);background:color-mix(in srgb,var(--olive) 9%,var(--surface))}
+.rec canvas{width:44px;height:44px}
+.bar{height:6px;border-radius:6px;background:var(--line);overflow:hidden;margin-top:5px}
+.bar i{display:block;height:100%;background:var(--ok);border-radius:6px}
+.check{width:24px;height:24px;border-radius:8px;border:2px solid var(--line);display:grid;place-items:center}
+.rec[aria-pressed="true"] .check{background:var(--olive);border-color:var(--olive)}
+
+/* farm HUD */
+.hud{display:flex;align-items:center;gap:8px;padding-block:10px;border-bottom:1px solid var(--line);background:var(--surface);flex-wrap:wrap}
+.plot-btn{display:flex;flex-direction:column;align-items:flex-start;border:0;background:none;padding:0;min-width:0;flex:1 1 100%;text-align:start}
+.plot-btn b{font-family:var(--f-display);font-size:19px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.plot-btn span{font-size:12px;color:var(--muted)}
+.rp{background:var(--sun-soft);border-color:transparent;color:var(--ink)}
+.rp .coin{width:16px;height:16px;border-radius:50%;background:var(--sun);box-shadow:inset 0 -2px 0 rgba(0,0,0,.2)}
+.grade{font-family:var(--f-display);font-weight:800}
+.stage{position:relative;flex:1;min-height:0;overflow:hidden;background:linear-gradient(var(--sky-top),var(--sky-bot))}
+.stage>canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+.vignette{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 70px 18px color-mix(in srgb,var(--frost) 70%,transparent);opacity:0;transition:opacity .6s}
+.vignette.on{opacity:1}
+.banner{position:absolute;top:10px;left:max(10px,env(safe-area-inset-left,0px));right:96px;background:var(--surface);border-radius:14px;padding:9px 11px;box-shadow:var(--shadow);display:flex;gap:10px;align-items:center;border:1px solid var(--line)}
+.banner .sev{width:8px;align-self:stretch;border-radius:8px;background:var(--frost)}
+.banner b{font-size:14px;display:block}
+.banner small{color:var(--muted);font-size:12px}
+.banner button{margin-inline-start:auto}
+.weekbtn{position:absolute;left:max(10px,env(safe-area-inset-left,0px));bottom:10px}
+.hint{position:absolute;left:50%;transform:translateX(-50%);bottom:56px;background:var(--ink);color:var(--surface);padding:7px 12px;border-radius:999px;font-size:13px;font-weight:600;max-width:calc(100% - 130px);width:max-content;text-align:center;pointer-events:none;border-radius:14px}
+.sidebar{position:absolute;top:10px;bottom:10px;right:max(8px,env(safe-area-inset-right,0px));width:80px;display:flex;flex-direction:column;gap:6px;background:color-mix(in srgb,var(--surface) 88%,transparent);backdrop-filter:blur(6px);border-radius:18px;padding:6px;box-shadow:var(--shadow);overflow-y:auto}
+.sb-crop{flex-shrink:0;position:relative;border:2px solid transparent;background:var(--surface-2);border-radius:14px;padding:4px 2px 5px;display:flex;flex-direction:column;align-items:center;gap:1px}
+.sb-crop canvas{width:40px;height:40px}
+.sb-crop b{font-size:11px;line-height:1.15}
+.sb-crop small{font-size:10px;line-height:1.15;color:var(--muted);text-align:center}
+.sb-crop[aria-pressed="true"]{border-color:var(--olive);background:color-mix(in srgb,var(--olive) 14%,var(--surface))}
+.sb-crop .badge{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;border-radius:9px;font-size:11px;font-weight:700;display:grid;place-items:center;padding:0 4px;color:#fff}
+.badge.w{background:var(--water)} .badge.h{background:var(--sun);color:#2A1A00}
+.sb-sep{height:1px;background:var(--line);margin:2px 4px}
+.tool{flex-shrink:0;border:2px solid transparent;background:var(--surface-2);border-radius:14px;padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600;touch-action:none;user-select:none;-webkit-user-select:none}
+.tool svg{width:28px;height:28px}
+.tool[aria-pressed="true"]{border-color:var(--sun);background:var(--sun-soft)}
+.drag-sickle{position:fixed;width:56px;height:56px;pointer-events:none;z-index:50;transform:translate(-50%,-70%) rotate(-20deg)}
+
+/* tabs */
+.tabbar{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:var(--surface);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tab{border:0;background:none;padding:8px 2px 9px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11.5px;font-weight:600;color:var(--muted);position:relative}
+.tab svg{width:24px;height:24px}
+.tab[aria-selected="true"]{color:var(--olive)}
+.tab .count{position:absolute;top:4px;left:calc(50% + 6px);background:var(--danger);color:#fff;border-radius:9px;font-size:10.5px;min-width:17px;height:17px;display:grid;place-items:center;padding:0 4px}
+
+/* panels */
+.sec-title{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.sec-title h2{font-size:22px}
+.cal{overflow-x:auto}
+.cal table{border-collapse:separate;border-spacing:0 6px;width:100%;min-width:300px;font-size:12px;table-layout:fixed}
+.cal th:first-child{width:84px}
+.cal th{font-weight:600;color:var(--muted);text-align:center;font-size:11px}
+.cal td{padding:0;height:22px;position:relative}
+.cal td.name{white-space:nowrap;padding-inline-end:8px;font-weight:600;font-size:13px}
+.cal .seg-p{background:var(--leaf);opacity:.55}
+.cal .seg-g{background:var(--leaf)}
+.cal .seg-h{background:var(--sun)}
+.cal .now{box-shadow:inset 2px 0 0 var(--danger)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-inline-end:5px}
+.note{display:flex;gap:10px;padding:12px;border-radius:14px;background:var(--warn-soft);font-size:14px}
+.note.info{background:var(--water-soft)}
+.note.ok{background:var(--ok-soft)}
+.wbar{display:grid;grid-template-columns:90px 1fr 64px;gap:10px;align-items:center;font-size:13px}
+.wbar .track{height:14px;border-radius:7px;background:var(--surface-2);overflow:hidden;position:relative}
+.wbar .track i{position:absolute;inset:0 auto 0 0;border-radius:7px}
+:root[dir="rtl"] .wbar .track i{inset:0 0 0 auto}
+.grade-big{font-family:var(--f-display);font-size:54px;line-height:1;font-weight:800;color:var(--olive)}
+.spray-grid{display:grid;grid-template-columns:56px repeat(8,minmax(0,1fr));gap:4px;font-size:11px}
+.spray-grid .h{color:var(--muted);text-align:center;font-weight:600}
+.spray-grid .d{font-weight:700;font-size:12px;align-self:center}
+.slot{border:0;border-radius:8px;height:46px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10.5px;font-weight:600;padding:0;line-height:1.1}
+.slot.g{background:var(--ok-soft);color:var(--ok)} .slot.y{background:var(--warn-soft);color:var(--warn)} .slot.r{background:var(--danger-soft);color:var(--danger)}
+.slot.sel{outline:3px solid var(--ink);outline-offset:-3px}
+.slot svg{width:14px;height:14px}
+.alert{display:grid;grid-template-columns:6px 1fr;gap:12px;padding:14px;border-radius:16px;border:1px solid var(--line);background:var(--surface)}
+.alert .sev{border-radius:6px}
+.alert h3{font-size:18px}
+.alert .act{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:12px;background:var(--surface-2);font-size:14px}
+.alert .act.done{opacity:.6;text-decoration:line-through}
+.alert.resolved{opacity:.65}
+.list-item{display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px;background:var(--surface-2);border:2px solid transparent;width:100%;text-align:start}
+.list-item.on{border-color:var(--olive)}
+.src-row{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:13px;padding:8px 0;border-bottom:1px solid var(--line)}
+.src-row:last-child{border-bottom:0}
+
+/* sheet, toast, coach */
+.backdrop{position:absolute;inset:0;background:rgba(10,15,5,.45);z-index:20}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:21;background:var(--surface);border-radius:22px 22px 0 0;max-height:80%;overflow-y:auto;padding-block:10px 22px;padding-bottom:max(22px,env(safe-area-inset-bottom,0px));box-shadow:0 -10px 30px rgba(0,0,0,.2);animation:up .25s ease-out}
+.sheet .grab{width:44px;height:5px;border-radius:5px;background:var(--line);margin:0 auto 12px}
+@keyframes up{from{transform:translateY(40px);opacity:.4}}
+.toast{position:absolute;left:50%;top:70px;transform:translateX(-50%);z-index:40;background:var(--ink);color:var(--surface);padding:9px 16px;border-radius:999px;font-weight:600;font-size:14px;box-shadow:var(--shadow);max-width:90%;text-align:center;animation:pop .25s ease-out}
+@keyframes pop{from{transform:translate(-50%,-8px);opacity:0}}
+.coach-ring{position:absolute;z-index:30;border-radius:18px;box-shadow:0 0 0 9999px rgba(8,12,4,.62);border:3px solid var(--sun);pointer-events:none;transition:all .3s}
+.coach-card{position:absolute;z-index:31;left:16px;right:16px;background:var(--surface);border-radius:18px;padding:16px;box-shadow:var(--shadow)}
+.coach-card h3{font-size:20px;margin-bottom:4px}
+.coach-card p{margin:0 0 12px;color:var(--muted);font-size:14px}
+.dots{display:flex;gap:5px}
+.dots i{width:7px;height:7px;border-radius:50%;background:var(--line)}
+.dots i.on{background:var(--olive)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="app" id="app">
+
+  <!-- WELCOME -->
+  <section class="screen" id="scr-welcome">
+    <div class="welcome">
+      <button class="chip lang-switch" data-act="lang" aria-label="Switch language"><span data-t="langBtn"></span></button>
+      <canvas id="welcomeCanvas" aria-hidden="true"></canvas>
+      <div class="panel pad">
+        <div class="logo">
+          <div class="logo-mark"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M12 21V10"/><path d="M12 13c-4 0-6-3-6-6 3 0 6 2 6 6Z" fill="#fff" fill-opacity=".25"/><path d="M12 11c0-4 3-7 7-7 0 4-3 7-7 7Z" fill="#fff" fill-opacity=".25"/><circle cx="18.5" cy="18.5" r="2.3"/></svg></div>
+          <h1 data-t="appName"></h1>
+        </div>
+        <p data-t="tagline"></p>
+        <div class="stack" style="gap:10px">
+          <button class="btn block" data-act="startOnboard" data-t="startNew"></button>
+          <button class="btn ghost block" data-act="openSample"><span data-t="openSample"></span></button>
+          <div class="row" style="justify-content:center"><span class="tag" data-t="demoNote"></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ONBOARDING -->
+  <section class="screen" id="scr-onboard" hidden>
+    <div class="ob-head pad">
+      <div class="row between"><span class="label" id="obStepLabel"></span><button class="chip" data-act="lang"><span data-t="langBtn"></span></button></div>
+      <div class="steps"><i id="st1"></i><i id="st2"></i><i id="st3"></i></div>
+    </div>
+
+    <div class="scroll pad" id="ob1">
+      <div class="stack">
+        <div><h2 data-t="ob1Title" style="font-size:26px"></h2><p class="muted" style="margin:4px 0 0" data-t="ob1Sub"></p></div>
+        <div class="map-wrap">
+          <canvas id="mapCanvas" aria-label="Map of the Jordan Valley and Amman area"></canvas>
+          <button class="btn sm map-loc" data-act="locate"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span data-t="useLoc"></span></button>
+          <span class="map-coords mono" id="coords"></span>
+        </div>
+        <div class="card stack" style="gap:10px">
+          <div class="row between"><label class="label" for="areaRange" data-t="area"></label>
+            <div class="seg" style="width:150px"><button data-unit="du" aria-pressed="true" data-t="dunum"></button><button data-unit="ha" aria-pressed="false" data-t="hectare"></button></div></div>
+          <div class="row between"><b class="mono" style="font-size:24px" id="areaOut"></b><span class="muted" style="font-size:13px" id="areaAlt"></span></div>
+          <input type="range" id="areaRange" min="5" max="300" step="1" value="60">
+          <button class="btn ghost" data-act="autofit"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/><path d="M8 9l4-2 5 3-1 5-5 2-3-3Z"/></svg><span data-t="autofit"></span></button>
+          <span class="muted" style="font-size:13px" id="fitOut"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="scroll pad" id="ob2" hidden>
+      <div class="stack">
+        <div><h2 data-t="ob2Title" style="font-size:26px"></h2><p class="muted" style="margin:4px 0 0" data-t="ob2Sub"></p></div>
+        <div class="field"><label class="label" for="fName" data-t="plotName"></label><input id="fName" autocomplete="off"></div>
+        <div class="field" id="fSoilWrap"><label class="label" for="fSoil"><span data-t="soil"></span> · <span data-t="required"></span></label>
+          <select id="fSoil"><option value="" data-t="choose"></option><option value="loam" data-t="soilLoam"></option><option value="clay" data-t="soilClay"></option><option value="sandy" data-t="soilSandy"></option><option value="calc" data-t="soilCalc"></option><option value="auto" data-t="soilAuto"></option></select>
+          <span class="err" id="errSoil" hidden data-t="errSoil"></span></div>
+        <div class="field"><span class="label" data-t="farmType"></span>
+          <div class="seg" id="segIrr"><button data-v="rain" aria-pressed="false" data-t="rainfed"></button><button data-v="irr" aria-pressed="true" data-t="irrigated"></button><button data-v="both" aria-pressed="false" data-t="both"></button></div></div>
+        <div class="field"><label class="label" for="fWater" data-t="waterAvail"></label><input id="fWater" type="number" inputmode="numeric" min="0" value="450"></div>
+        <div class="field" id="fBudgetWrap"><label class="label" for="fBudget"><span data-t="budget"></span> · <span data-t="required"></span></label><input id="fBudget" type="number" inputmode="numeric" min="0" value="3500"><span class="err" id="errBudget" hidden data-t="errBudget"></span></div>
+        <div class="field"><span class="label" data-t="prevCrops"></span><div class="chips" id="prevChips"></div></div>
+        <div class="field"><span class="label" data-t="keepCrops"></span><div class="chips" id="keepChips"></div></div>
+        <div class="field"><span class="label" data-t="priority"></span>
+          <div class="seg" id="segPri"><button data-v="water" aria-pressed="true" data-t="priWater"></button><button data-v="soil" aria-pressed="false" data-t="priSoil"></button><button data-v="cost" aria-pressed="false" data-t="priCost"></button></div></div>
+      </div>
+    </div>
+
+    <div class="scroll pad" id="ob3" hidden>
+      <div class="stack">
+        <div><h2 id="ob3Title" style="font-size:26px"></h2><p class="muted" style="margin:4px 0 0" id="ob3Sub"></p></div>
+        <div class="src-list" id="srcList"></div>
+        <div id="ob3Results" class="stack" hidden>
+          <div class="sec-title"><h2 data-t="landProfile"></h2><span class="tag" data-t="demoData"></span></div>
+          <div class="profile" id="profile"></div>
+          <div class="sec-title"><h2 data-t="recCrops"></h2></div>
+          <p class="muted" style="margin:-8px 0 0;font-size:14px" data-t="pickCrops"></p>
+          <div class="stack" style="gap:8px" id="recList"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ob-foot pad">
+      <button class="btn ghost" data-act="obBack" data-t="back"></button>
+      <button class="btn" data-act="obNext" id="obNextBtn"></button>
+    </div>
+  </section>
+
+  <!-- MAIN -->
+  <section class="screen" id="scr-main" hidden>
+    <div class="hud pad">
+      <button class="plot-btn" data-act="plots" id="plotBtn"><b id="plotName"></b><span id="plotMeta"></span></button>
+      <span class="chip rp" id="rpChip"><span class="coin"></span><b class="mono" id="rpVal"></b><span data-t="rp"></span></span>
+      <button class="chip" data-act="goSeed" id="gradeChip"><span data-t="resilience"></span><b class="grade" id="gradeVal"></b></button>
+      <span class="chip" id="wxChip"></span>
+    </div>
+
+    <div class="screen" id="tab-farm">
+      <div class="stage" id="stage">
+        <canvas id="farmCanvas" aria-label="Your farm"></canvas>
+        <div class="vignette" id="vignette"></div>
+        <div class="banner" id="banner" hidden></div>
+        <aside class="sidebar" id="sidebar" aria-label="Crops and tools"></aside>
+        <button class="btn sm ghost weekbtn" data-act="week"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 4l10 8-10 8Z"/><path d="M19 5v14"/></svg><span data-t="simWeek"></span></button>
+        <div class="hint" id="hint" hidden></div>
+      </div>
+    </div>
+    <div class="screen scroll pad" id="tab-plan" hidden></div>
+    <div class="screen scroll pad" id="tab-spray" hidden></div>
+    <div class="screen scroll pad" id="tab-alerts" hidden></div>
+    <div class="screen scroll pad" id="tab-more" hidden></div>
+
+    <nav class="tabbar" role="tablist">
+      <button class="tab" role="tab" data-tab="farm" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 11l9-6 9 6"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/></svg><span data-t="tFarm"></span></button>
+      <button class="tab" role="tab" data-tab="plan" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span data-t="tPlan"></span></button>
+      <button class="tab" role="tab" data-tab="spray" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h11a3 3 0 1 0-3-3"/><path d="M3 12h15a3 3 0 1 1-3 3"/><path d="M3 16h7"/></svg><span data-t="tSpray"></span></button>
+      <button class="tab" role="tab" data-tab="alerts" aria-selected="false" id="tabAlerts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l10 18H2Z"/><path d="M12 10v5M12 18v.5"/></svg><span data-t="tAlerts"></span><span class="count" id="alertCount"></span></button>
+      <button class="tab" role="tab" data-tab="more" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg><span data-t="tMore"></span></button>
+    </nav>
+  </section>
+
+  <div id="layer"></div>
+</div>
+
+<script>
+(()=>{
+/* ---------------- i18n ---------------- */
+const T={
+appName:["Farm Studio","فارم ستوديو"],
+tagline:["Plan water, spraying, frost defence and harvest from NASA Earth data, played like a farm game.","خطّط للري ورش المبيدات والحماية من الصقيع والحصاد اعتمادًا على بيانات ناسا لرصد الأرض، بأسلوب لعبة مزرعة."],
+langBtn:["عربي","English"],
+startNew:["Add my farm","أضف مزرعتي"],
+openSample:["Open sample farm · North Ghor grapes","افتح مزرعة تجريبية · عنب الغور الشمالي"],
+demoNote:["Prototype · all values are sample data","نموذج أولي · جميع القيم بيانات تجريبية"],
+stepOf:["Step {n} of 3","الخطوة {n} من 3"],
+ob1Title:["Where is your land?","أين تقع أرضك؟"],
+ob1Sub:["Tap the map to drop the pin, set the area, then fit the boundary.","اضغط على الخريطة لوضع الدبوس، حدّد المساحة، ثم لائم الحدود."],
+useLoc:["My location","موقعي"],
+area:["Land area","مساحة الأرض"],dunum:["dunum","دونم"],hectare:["hectare","هكتار"],
+autofit:["Autofit boundary","ملاءمة الحدود تلقائيًا"],
+fitDone:["Boundary fitted: {a} dunums, 7 corners","تم تحديد الحدود: {a} دونم، 7 زوايا"],
+fitTodo:["Boundary not fitted yet. You can also skip this.","لم تُحدَّد الحدود بعد. يمكنك تخطي هذه الخطوة."],
+located:["Location found (demo): North Ghor","تم تحديد الموقع (تجريبي): الغور الشمالي"],
+ob2Title:["About your farm","معلومات مزرعتك"],
+ob2Sub:["Only what we use to build your plan.","فقط ما نحتاجه لبناء خطتك."],
+plotName:["Plot name","اسم القطعة"],soil:["Soil type","نوع التربة"],required:["required","مطلوب"],choose:["Choose…","اختر…"],
+soilLoam:["Loam","طميية"],soilClay:["Clay","طينية"],soilSandy:["Sandy","رملية"],soilCalc:["Calcareous","كلسية"],soilAuto:["Not sure, estimate it for me","لا أعرف، قدّرها لي"],
+errSoil:["Pick a soil type, or choose “Not sure”.","اختر نوع التربة، أو اختر «لا أعرف»."],
+farmType:["Farm type","نوع الزراعة"],rainfed:["Rain-fed","بعلية"],irrigated:["Irrigated","مروية"],both:["Both","كلاهما"],
+waterAvail:["Water available (m³ per week)","المياه المتاحة (م³ أسبوعيًا)"],
+budget:["Budget per season (JOD)","الميزانية لكل موسم (دينار)"],
+errBudget:["Enter a budget above 0 JOD.","أدخل ميزانية أكبر من 0 دينار."],
+prevCrops:["Previous crops (optional)","المحاصيل السابقة (اختياري)"],
+keepCrops:["Crops you must keep","محاصيل يجب الحفاظ عليها"],
+priority:["What matters most","الأولوية"],priWater:["Water","المياه"],priSoil:["Soil","التربة"],priCost:["Cost","التكلفة"],
+analyze:["Analyze my land","حلّل أرضي"],back:["Back","رجوع"],next:["Next","التالي"],
+ob3Load:["Reading your land from space","نقرأ أرضك من الفضاء"],
+ob3LoadSub:["Pulling satellite records for your coordinates.","نجلب سجلات الأقمار الصناعية لإحداثياتك."],
+ob3Done:["Your land, from space","أرضك من الفضاء"],
+ob3DoneSub:["Here is what the data says about this plot.","هذا ما تقوله البيانات عن هذه القطعة."],
+landProfile:["Land profile","ملف الأرض"],demoData:["sample data","بيانات تجريبية"],
+recCrops:["Best crops here","أفضل المحاصيل هنا"],
+pickCrops:["Tick the crops to put in your plan. You can change this later.","اختر المحاصيل التي تريدها في خطتك. يمكنك تغييرها لاحقًا."],
+goFarm:["Plan ready · Go to my farm","تم تشكيل خطتك · انتقل إلى المزرعة"],
+rp:["RP","نقطة"],resilience:["Grade","التقييم"],
+tFarm:["Farm","المزرعة"],tPlan:["Plan","الخطة"],tSpray:["Spray","الرش"],tAlerts:["Risks","المخاطر"],tMore:["More","المزيد"],
+simWeek:["+1 week","+ أسبوع"],
+tapToPlant:["Tap to plant","اضغط للزراعة"],
+pickSpot:["Green = best spot. Tap a plot to plant {c}.","الأخضر = أفضل مكان. اضغط على قطعة لزراعة {c}."],
+needsWater:["Water now","يحتاج ري"],readyN:["Ready","جاهز"],
+harvestOn:["Harvest {d}","الحصاد {d}"],
+water:["Water","ري"],sickle:["Sickle","المنجل"],topo:["Terrain","التضاريس"],
+topoHint:["Blue plots sit low: frost and flood risk (SRTM).","القطع الزرقاء منخفضة: خطر صقيع وفيضان (SRTM)."],
+waterHint:["Tap a plot with a drop to water it.","اضغط على قطعة عليها قطرة لريّها."],
+dragHint:["Drag across golden plots to harvest","اسحب فوق القطع الذهبية للحصاد"],
+planted:["{c} planted · +{p} RP","تمت زراعة {c} · +{p} نقطة"],
+plantedPoor:["Planted in a weak spot · +{p} RP","زُرعت في مكان ضعيف · +{p} نقطة"],
+occupied:["This plot already has a crop.","هذه القطعة مزروعة بالفعل."],
+harvested:["Harvested {n} plots · +{p} RP","تم حصاد {n} قطع · +{p} نقطة"],
+watered:["Watered {mm} mm · +{p} RP","تم الري {mm} ملم · +{p} نقطة"],
+noWater:["No plot needs water right now.","لا توجد قطعة تحتاج ري حاليًا."],
+holdOff:["Hold off! Rain is coming","انتظر! المطر قادم"],
+holdOffBody:["GPM forecasts {mm} mm of rain within 36 hours. Skip watering now and save about {m} m³.","يتوقع GPM هطول {mm} ملم خلال 36 ساعة. أجّل الري ووفّر حوالي {m} م³."],
+waitRain:["Wait for rain · +15 RP","انتظر المطر · +15 نقطة"],waterAnyway:["Water anyway","اسقِ على أي حال"],
+waiting:["Waiting for rain. Tap +1 week to see it fall.","بانتظار المطر. اضغط + أسبوع لرؤيته يهطل."],
+rained:["{mm} mm of rain fell. Soil refilled.","هطل {mm} ملم من المطر. امتلأت التربة."],
+weekPassed:["A week passed. Check for drops and golden plots.","مرّ أسبوع. تفقّد القطرات والقطع الذهبية."],
+harvestDates:["Harvest dates","مواعيد الحصاد"],
+sickleHow:["Press and hold the sickle, then drag it across golden plots, like reaping in the field.","اضغط مطولًا على المنجل ثم اسحبه فوق القطع الذهبية، كما تحصد في الحقل."],
+readyNow:["Ready now","جاهز الآن"],
+plotInfo:["Plot {c}{r}","القطعة {c}{r}"],
+age:["Age","العمر"],days:["{n} days","{n} يوم"],ndvi:["NDVI (MODIS)","NDVI (MODIS)"],moist:["Soil moisture (SMAP)","رطوبة التربة (SMAP)"],
+suit:["Suitability","الملاءمة"],elev:["Position","الموقع"],low:["Low-lying","منخفضة"],flat:["Level","مستوية"],
+emptyPlot:["Empty plot","قطعة فارغة"],bestFor:["Best for","الأنسب لـ"],
+close:["Close","إغلاق"],
+frostBanner:["Frost risk Thursday night","خطر صقيع ليلة الخميس"],
+seeWhat:["What to do","ماذا أفعل"],
+rainIn:["Rain in 36 h","مطر خلال 36 ساعة"],dry:["Dry week","أسبوع جاف"],
+/* plan */
+calendar:["Crop calendar","تقويم المحاصيل"],
+lgPlant:["Planting","زراعة"],lgGrow:["Growing","نمو"],lgHarv:["Harvest","حصاد"],lgNow:["Today","اليوم"],
+lateSpring:["Soil is 2 °C colder than the 20-year average for this month (NASA POWER). Delay tomato transplanting by about 10 days.","التربة أبرد بدرجتين من متوسط 20 عامًا لهذا الشهر (NASA POWER). أخّر شتل البندورة حوالي 10 أيام."],
+waterBudget:["Weekly water","المياه الأسبوعية"],need:["Your crops need","تحتاج محاصيلك"],avail:["You have","المتاح لديك"],
+overBudget:["Over your water limit by {m} m³. Shift one plot to olives or sorghum.","تجاوزت حد المياه بـ {m} م³. حوّل قطعة إلى زيتون أو ذرة رفيعة."],
+inBudget:["Within your water limit, with {m} m³ to spare.","ضمن حد المياه، ويتبقى {m} م³."],
+seedBank:["Seed bank","بنك البذور"],
+gradeWhy:["{n} crop types on this plot, {d} of them drought-tolerant.","{n} أنواع محاصيل في هذه القطعة، {d} منها تتحمل الجفاف."],
+dryTrend:["North Ghor rainfall fell 11% over 2015–2025 (NASA POWER). Drought-tolerant crops will protect next seasons.","انخفضت أمطار الغور الشمالي 11% خلال 2015–2025 (NASA POWER). المحاصيل المتحملة للجفاف تحمي المواسم القادمة."],
+unlock:["Add to my crops","أضف إلى محاصيلي"],added:["In your crops","ضمن محاصيلك"],
+waterUse:["{w} mm/week","{w} ملم/أسبوع"],
+/* spray */
+sprayTitle:["Safe-spray window","نافذة الرش الآمن"],
+spraySub:["Next 3 days from NASA POWER hourly wind, rain and humidity. Pick a green slot.","الأيام الثلاثة القادمة من بيانات NASA POWER للرياح والمطر والرطوبة كل ساعة. اختر خانة خضراء."],
+drone:["Drone","طائرة مسيّرة"],tractor:["Tractor","جرار"],
+lgSafe:["Safe","آمن"],lgCaution:["Caution","حذر"],lgNo:["Do not spray","لا ترش"],
+locked:["Locked: {why}. Spray here would drift or wash off.","مقفل: {why}. الرش هنا سينجرف أو يُغسل."],
+whyWind:["wind {w} km/h","رياح {w} كم/س"],whyRain:["{p}% chance of rain","احتمال مطر {p}%"],
+caution:["Possible, but {why}. A green slot is better.","ممكن، لكن {why}. الخانة الخضراء أفضل."],
+whyHot:["hot and dry ({t} °C)","حار وجاف ({t} °م)"],
+scheduled:["Spray booked for {d} {h}:00 · +20 RP","تم حجز الرش {d} الساعة {h}:00 · +20 نقطة"],
+yourSlot:["Booked","محجوز"],
+today:["Today","اليوم"],
+/* alerts */
+alertsTitle:["Weather risks","مخاطر الطقس"],
+alertsSub:["Warnings 3–7 days ahead. Each action you take here is a checklist for the field.","تحذيرات قبل 3–7 أيام. كل إجراء هنا هو قائمة مهام للحقل."],
+deploy:["Done","تم"],deployed:["Done","تم التنفيذ"],
+resolved:["Prepared","تم الاستعداد"],
+conf:["{p}% confidence","ثقة {p}%"],
+/* more */
+language:["Language","اللغة"],myPlots:["My plots","قطعي"],addPlot:["Add a plot","إضافة قطعة"],
+dataSources:["Data sources","مصادر البيانات"],replay:["Replay tutorial","إعادة الشرح"],
+about:["This is a design prototype for NASA Space Apps (Field Shift). Numbers are realistic samples, not live readings. The live version will call NASA POWER and AppEEARS and run the frost model on a server.","هذا نموذج تصميم لمسابقة NASA Space Apps (Field Shift). الأرقام عينات واقعية وليست قراءات حية. النسخة الفعلية ستستدعي NASA POWER و AppEEARS وتشغّل نموذج الصقيع على الخادم."],
+updated:["sample · {d}","تجريبي · {d}"],
+/* coach */
+c1t:["Your crops","محاصيلك"],c1b:["Tap a crop. The best plots for it light up green, using soil, terrain and temperature.","اضغط على محصول. تضيء أفضل القطع له بالأخضر، حسب التربة والتضاريس والحرارة."],
+c2t:["Your land","أرضك"],c2b:["Each square is a part of your real plot. Drops mean a plot needs water today; tap to water it.","كل مربع جزء من أرضك الحقيقية. القطرة تعني أن القطعة تحتاج ري اليوم؛ اضغط لريّها."],
+c3t:["The sickle","المنجل"],c3b:["Tap to see harvest dates. Press and hold, then drag over golden plots to harvest.","اضغط لرؤية مواعيد الحصاد. اضغط مطولًا ثم اسحب فوق القطع الذهبية للحصاد."],
+c4t:["Risks","المخاطر"],c4b:["Frost, heavy rain and heat warnings arrive here, with what to do on the ground.","تصل هنا تحذيرات الصقيع والأمطار الغزيرة والحر، مع ما يجب فعله على الأرض."],
+c5t:["Resilience Points","نقاط المرونة"],c5b:["You earn RP for climate-smart choices: waiting for rain, safe spraying, preparing for frost.","تكسب نقاطًا على القرارات الذكية مناخيًا: انتظار المطر، الرش الآمن، الاستعداد للصقيع."],
+skip:["Skip","تخطي"],gotIt:["Start farming","ابدأ الزراعة"],
+};
+let LANG="en";
+const t=(k,v)=>{let s=(T[k]||[k])[LANG==="ar"?1:0]||T[k][0];if(v)for(const x in v)s=s.replaceAll("{"+x+"}",v[x]);return s};
+const loc=()=>LANG==="ar"?"ar-JO-u-nu-latn":"en-GB";
+const fmtDate=d=>d.toLocaleDateString(loc(),{day:"numeric",month:"short"});
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+function applyI18n(){
+  document.documentElement.lang=LANG;document.documentElement.dir=LANG==="ar"?"rtl":"ltr";
+  $$("[data-t]").forEach(e=>e.textContent=t(e.dataset.t));
+}
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ---------------- data ---------------- */
+const CROPS={
+ grape:{en:"Grapes",ar:"عنب",water:35,days:150,frost:true,dt:false,base:86,col:"#7B3F8C",cal:[[1,2,"p"],[2,5,"g"],[5,7,"h"]]},
+ tomato:{en:"Tomatoes",ar:"بندورة",water:40,days:90,frost:true,dt:false,base:84,col:"#D9412B",cal:[[8,9,"p"],[9,11,"g"],[11,12,"h"],[1,2,"p"],[2,4,"g"],[4,5,"h"]]},
+ olive:{en:"Olives",ar:"زيتون",water:15,days:210,frost:false,dt:true,base:80,col:"#5C6B2E",cal:[[0,9,"g"],[9,11,"h"]]},
+ date:{en:"Date palm",ar:"نخيل",water:45,days:240,frost:false,dt:true,base:78,col:"#B5772A",cal:[[2,3,"p"],[3,7,"g"],[7,10,"h"]]},
+ cucumber:{en:"Cucumbers",ar:"خيار",water:38,days:60,frost:true,dt:false,base:72,col:"#3F8A3A",cal:[[9,10,"p"],[10,11,"g"],[11,13,"h"]]},
+ wheat:{en:"Wheat",ar:"قمح",water:12,days:160,frost:false,dt:false,base:64,col:"#D9A93A",cal:[[10,11,"p"],[11,12,"g"],[0,4,"g"],[4,5,"h"]]},
+ sorghum:{en:"Sorghum",ar:"ذرة رفيعة",water:10,days:110,frost:true,dt:true,base:70,col:"#9C3B1E",cal:[[3,4,"p"],[4,7,"g"],[7,8,"h"]]},
+};
+const cName=id=>CROPS[id][LANG==="ar"?"ar":"en"];
+const N=6;
+function rng(seed){return()=>{seed=(seed*16807)%2147483647;return(seed-1)/2147483646}}
+function makePlot(o){
+  const r=rng(o.seed||7),tiles=[];
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+    const low=(x+(N-1-y))<=2 && o.valley; // front-left corner sits low
+    tiles.push({c:x,r:y,low,noise:r(),crop:null,age:0,moist:.55+r()*.3,wait:false});
+  }
+  return {name:o.name,region:o.region,lat:o.lat,lon:o.lon,area:o.area,soil:o.soil||"loam",water:o.water||450,crops:o.crops.slice(),tiles,valley:o.valley,elev:o.elev};
+}
+const S={rp:120,cur:0,plots:[],sel:null,tool:null,rainSoon:true,rainAsked:false,topo:false,spray:{tool:"drone",slot:null},alerts:null,tab:"farm",tutorialSeen:false};
+function samplePlot(){
+  const p=makePlot({name:"Abu Saleh vineyard",region:"North Ghor",lat:32.47,lon:35.61,area:60,crops:["grape","tomato","olive","date"],valley:true,elev:-220,seed:11});
+  const put=(i,crop,age,moist)=>{const tl=p.tiles[i];tl.crop=crop;tl.age=age;tl.moist=moist};
+  [1,2,3,4,8,9,10].forEach((i,k)=>put(i,"grape",[150,150,150,120,95,150,60][k],[.6,.5,.25,.3,.7,.62,.22][k]));
+  [14,15,20].forEach((i,k)=>put(i,"tomato",[40,90,25][k],[.28,.6,.65][k]));
+  [5,11].forEach(i=>put(i,"olive",130,.5));
+  put(17,"date",180,.45);
+  return p;
+}
+const P=()=>S.plots[S.cur];
+const ready=tl=>tl.crop&&tl.age>=CROPS[tl.crop].days;
+const thirsty=tl=>tl.crop&&!ready(tl)&&tl.moist<.35&&!tl.wait;
+function suit(tl,id){const C=CROPS[id];let s=C.base+(tl.noise-.5)*18;if(tl.low&&C.frost)s-=34;if(tl.low&&!C.frost)s+=4;if(P().soil==="sandy"&&!C.dt)s-=8;return Math.max(5,Math.min(98,Math.round(s)))}
+function harvestDate(tl){const d=new Date();d.setDate(d.getDate()+Math.max(0,CROPS[tl.crop].days-tl.age));return d}
+function stageOf(tl){if(!tl.crop)return-1;if(ready(tl))return 4;return Math.min(3,Math.floor(tl.age/CROPS[tl.crop].days*4))}
+
+function initAlerts(){S.alerts=[
+ {id:"frost",sev:"frost",title:["Frost risk · Thursday night","خطر صقيع · ليلة الخميس"],body:["−1 °C expected at 4 AM in your 3 low-lying plots. Land surface temperature from ECOSTRESS, forecast by the frost model trained on 20 years of NASA POWER data.","متوقع −1 °م الساعة 4 فجرًا في القطع المنخفضة الثلاث. حرارة سطح الأرض من ECOSTRESS، والتوقع من نموذج الصقيع المدرّب على 20 عامًا من بيانات NASA POWER."],conf:82,src:"ECOSTRESS · NASA POWER",acts:[["Run frost sprinklers from 2 AM to sunrise","شغّل رشاشات الصقيع من 2 فجرًا حتى الشروق"],["Cover young vines with frost fleece","غطِّ الكروم الصغيرة بغطاء الصقيع"],["Delay pruning until after Thursday","أجّل التقليم إلى ما بعد الخميس"]],done:[]},
+ {id:"rain",sev:"water",title:["Heavy rain · Saturday","أمطار غزيرة · السبت"],body:["28 mm expected in 6 hours. Low plots may flood.","متوقع 28 ملم خلال 6 ساعات. قد تغمر المياه القطع المنخفضة."],conf:74,src:"GPM IMERG",acts:[["Clear drainage channels in low plots","نظّف قنوات التصريف في القطع المنخفضة"],["Postpone fertilizer until Monday","أجّل التسميد حتى الاثنين"]],done:[]},
+ {id:"heat",sev:"danger",title:["Heatwave · next Tuesday","موجة حر · الثلاثاء القادم"],body:["Up to 41 °C for two days. Grapes near harvest can sunburn.","حتى 41 °م لمدة يومين. قد يحترق العنب القريب من الحصاد."],conf:66,src:"NASA POWER",acts:[["Put up shade nets over ready grapes","ركّب شبك التظليل فوق العنب الجاهز"],["Irrigate at dawn, not midday","اسقِ فجرًا وليس وقت الظهيرة"]],done:[]},
+]}
+const L=a=>a[LANG==="ar"?1:0];
+const openAlerts=()=>S.alerts.filter(a=>a.done.length<a.acts.length);
+
+/* ---------------- crop drawing (shared by farm, sidebar, lists) ---------------- */
+function drawCrop(g,id,x,y,s,stage){ // x,y = ground point; s = scale (tile half-width ~ 1)
+  const C=CROPS[id];const st=Math.max(0,stage);const k=.45+.55*Math.min(st,3)/3;
+  const leaf=st>=4?"#8FB33A":"#4E8E2E",leaf2=st>=4?"#B9C64A":"#6DAE3C";
+  g.save();g.translate(x,y);g.scale(s,s);
+  const blob=(cx,cy,r,c)=>{g.fillStyle=c;g.beginPath();g.arc(cx,cy,r,0,7);g.fill()};
+  if(id==="grape"){
+    g.strokeStyle="#6B4A2B";g.lineWidth=2.4;g.beginPath();g.moveTo(-13,2);g.lineTo(-13,-24);g.moveTo(13,2);g.lineTo(13,-24);g.stroke();
+    g.lineWidth=1.2;g.beginPath();g.moveTo(-15,-20);g.lineTo(15,-20);g.stroke();
+    for(let i=-1;i<=1;i++){blob(i*10,-21*k,7*k,leaf);blob(i*10+4,-24*k,5*k,leaf2)}
+    if(st>=3){for(let i=-1;i<=1;i++){const cx=i*10,cy=-12;const c=st>=4?C.col:"#9DBB5A";for(let j=0;j<4;j++)blob(cx+(j%2?2:-2),cy+j*2.4,2.6,c)}}
+  }else if(id==="tomato"){
+    blob(0,-9*k,11*k,leaf);blob(-6,-13*k,7*k,leaf2);blob(6,-12*k,7*k,leaf2);
+    if(st>=2){const c=st>=4?C.col:st>=3?"#E39B3A":"#9CC35A";blob(-5,-7,3.6,c);blob(5,-10,3.6,c);blob(1,-15,3.4,c)}
+  }else if(id==="olive"){
+    g.fillStyle="#6B4A2B";g.fillRect(-2,-14*k,4,14*k);
+    blob(0,-22*k,13*k,"#7C8F55");blob(-7,-18*k,8*k,"#93A46A");blob(7,-19*k,8*k,"#6E8248");
+    if(st>=3){const c=st>=4?"#2E2A3A":"#8FA04E";[[-5,-20],[4,-24],[7,-17],[-2,-27]].forEach(p=>blob(p[0]*k,p[1]*k,2,c))}
+  }else if(id==="date"){
+    g.strokeStyle="#8A6238";g.lineWidth=4;g.beginPath();g.moveTo(0,0);g.lineTo(0,-30*k);g.stroke();
+    g.strokeStyle=leaf;g.lineWidth=3;g.lineCap="round";
+    for(let a=0;a<7;a++){const an=Math.PI+a*Math.PI/6;g.beginPath();g.moveTo(0,-30*k);g.quadraticCurveTo(Math.cos(an)*12*k,-30*k-8*k,Math.cos(an)*20*k,-30*k+Math.abs(Math.sin(an))*-6*k+8*k);g.stroke()}
+    if(st>=3){const c=st>=4?C.col:"#C9B04A";blob(-3,-26*k,3,c);blob(3,-25*k,3,c)}
+  }else if(id==="cucumber"){
+    for(let i=-1;i<=1;i++){blob(i*9,-5*k,7*k,leaf);blob(i*9+3,-8*k,4.5*k,leaf2)}
+    if(st>=2){g.fillStyle=st>=4?"#2F6B2A":"#7DB24A";g.beginPath();g.ellipse(-4,-3,6,2.4,.3,0,7);g.fill();g.beginPath();g.ellipse(7,-4,6,2.4,-.3,0,7);g.fill()}
+  }else{ // wheat, sorghum: stalks
+    const head=id==="sorghum"?(st>=4?C.col:"#7DA344"):(st>=4?"#E2B64A":"#93BD4F");
+    g.strokeStyle=st>=4&&id==="wheat"?"#C9A23F":"#5C9A35";g.lineWidth=1.6;
+    for(let i=-2;i<=2;i++){const h=(20+((i*7)&3)*2)*k;g.beginPath();g.moveTo(i*5,0);g.lineTo(i*5+1,-h);g.stroke();
+      g.fillStyle=head;g.beginPath();g.ellipse(i*5+1,-h-3*k,id==="sorghum"?3.4:2.2,6*k,0,0,7);g.fill()}
+  }
+  g.restore();
+}
+function cropIcon(cv,id,stage=3){const d=devicePixelRatio||1,w=cv.clientWidth||44;cv.width=w*d;cv.height=w*d;const g=cv.getContext("2d");g.scale(d,d);
+  g.fillStyle=css("--soil");g.beginPath();g.ellipse(w/2,w*.8,w*.36,w*.12,0,0,7);g.fill();drawCrop(g,id,w/2,w*.8,w/44*1.05,stage)}
+
+/* ---------------- farm canvas ---------------- */
+const cv=$("#farmCanvas"),g=cv.getContext("2d");let W=0,H=0,TW=60,TH=30,ox=0,oy=0,D=14;
+const fx=[];// floating texts
+let clouds=[{x:.1,y:.12,s:1},{x:.6,y:.2,s:.8}],dragTile=null;
+function sizeFarm(){const r=cv.getBoundingClientRect();const d=devicePixelRatio||1;W=r.width;H=r.height;cv.width=W*d;cv.height=H*d;g.setTransform(d,0,0,d,0,0);
+  const sb=96;const avail=Math.max(160,W-sb-16);TW=Math.max(20,Math.min(avail/(N+1.2),(H-90)/(N+1.4)*2,92));TH=TW/2;D=TW*.28;ox=(W-sb)/2+4;oy=Math.max(40,(H-(N+2)*TH-D)/2+TH*.6)}
+const tp=(c,r)=>({x:ox+(c-r)*TW/2,y:oy+(c+r)*TH/2});
+function pick(px,py){const a=(px-ox)/(TW/2),b=(py-oy)/(TH/2);const c=Math.floor((a+b)/2),r=Math.floor((b-a)/2);if(c<0||r<0||c>=N||r>=N)return null;return P().tiles[r*N+c]}
+function diamond(x,y,w,h){g.beginPath();g.moveTo(x,y);g.lineTo(x+w/2,y+h/2);g.lineTo(x,y+h);g.lineTo(x-w/2,y+h/2);g.closePath()}
+function shade(hex,f){const n=parseInt(hex.slice(1),16);let r=n>>16,gg=n>>8&255,b=n&255;const m=v=>Math.max(0,Math.min(255,Math.round(f<0?v*(1+f):v+(255-v)*f)));return`rgb(${m(r)},${m(gg)},${m(b)})`}
+function drawFarm(now){
+  const p=P();if(!p)return;g.clearRect(0,0,W,H);
+  // clouds
+  if(S.rainSoon){clouds.forEach(cl=>{const x=((cl.x+now*.000012*cl.s)%1.3-.15)*W,y=cl.y*H;g.fillStyle="rgba(255,255,255,.85)";[[0,0,18],[16,-6,22],[34,0,16],[16,4,18]].forEach(b=>{g.beginPath();g.arc(x+b[0]*cl.s,y+b[1]*cl.s,b[2]*cl.s,0,7);g.fill()});
+    g.strokeStyle="rgba(80,140,200,.5)";g.lineWidth=1.5;for(let i=0;i<4;i++){const yy=(now*.06+i*13)%26;g.beginPath();g.moveTo(x+i*10*cl.s,y+18*cl.s+yy);g.lineTo(x+i*10*cl.s-2,y+24*cl.s+yy);g.stroke()}})}
+  // island
+  const grass=css("--grass"),gdk=css("--grass-dk"),soil=css("--soil"),sdk=css("--soil-dk");
+  const T0=tp(-1,-1),R0=tp(N+1,-1),B0=tp(N+1,N+1),L0=tp(-1,N+1);
+  g.fillStyle=sdk;g.beginPath();g.moveTo(L0.x,L0.y);g.lineTo(B0.x,B0.y);g.lineTo(B0.x,B0.y+D);g.lineTo(L0.x,L0.y+D);g.fill();
+  g.fillStyle=shade(sdk,-.2);g.beginPath();g.moveTo(B0.x,B0.y);g.lineTo(R0.x,R0.y);g.lineTo(R0.x,R0.y+D);g.lineTo(B0.x,B0.y+D);g.fill();
+  g.fillStyle=grass;g.beginPath();g.moveTo(T0.x,T0.y);g.lineTo(R0.x,R0.y);g.lineTo(B0.x,B0.y);g.lineTo(L0.x,L0.y);g.closePath();g.fill();
+  g.strokeStyle=gdk;g.lineWidth=2;g.stroke();
+  // barn at back corner
+  {const b=tp(-1,-1);const bx=b.x,by=b.y+TH*.55,s=TW/60;g.save();g.translate(bx,by);g.scale(s,s);
+   g.fillStyle="#B8452F";g.beginPath();g.moveTo(-16,0);g.lineTo(0,8);g.lineTo(0,-14);g.lineTo(-16,-22);g.fill();
+   g.fillStyle="#97351F";g.beginPath();g.moveTo(0,8);g.lineTo(16,0);g.lineTo(16,-22);g.lineTo(0,-14);g.fill();
+   g.fillStyle="#5A3A28";g.beginPath();g.moveTo(-18,-21);g.lineTo(-2,-38);g.lineTo(18,-21);g.lineTo(0,-13);g.fill();
+   g.fillStyle="#F4E6C8";g.fillRect(4,-8,7,10);g.restore()}
+  // trees on side corners
+  [tp(N+.2,-1),tp(-1,N+.2)].forEach(q=>{const s=TW/60;g.fillStyle="#6B4A2B";g.fillRect(q.x-2*s,q.y+TH*.5-10*s,4*s,10*s);g.fillStyle="#4E8E2E";g.beginPath();g.arc(q.x,q.y+TH*.5-16*s,11*s,0,7);g.fill();g.fillStyle="#6DAE3C";g.beginPath();g.arc(q.x-4*s,q.y+TH*.5-19*s,6*s,0,7);g.fill()});
+  // tiles
+  const sel=S.sel;
+  p.tiles.forEach(tl=>{const q=tp(tl.c,tl.r);const inset=.86;const wet=Math.max(0,Math.min(1,tl.moist));
+    const base=tl.crop?shade(soil,-.35*wet):shade(soil,.12-.25*wet);
+    g.fillStyle=shade(sdk,-.1);diamond(q.x,q.y+TH*(1-inset)/2+3,TW*inset,TH*inset);g.fill();
+    g.fillStyle=base;diamond(q.x,q.y+TH*(1-inset)/2,TW*inset,TH*inset);g.fill();
+    // furrows
+    g.strokeStyle="rgba(0,0,0,.12)";g.lineWidth=1;for(let i=1;i<4;i++){const f=i/4;const a={x:q.x-TW*inset/2*(1-f),y:q.y+TH/2-TH*inset/2*(1-f)+TH*(1-inset)/2*0};g.beginPath();g.moveTo(q.x-TW*inset/2+TW*inset/2*f,q.y+TH/2-TH*inset/2*f);g.lineTo(q.x+TW*inset/2*f,q.y+TH/2+TH*inset/2*(1-f));g.stroke()}
+    if(S.topo&&tl.low){g.fillStyle="rgba(47,127,181,.45)";diamond(q.x,q.y+TH*(1-inset)/2,TW*inset,TH*inset);g.fill()}
+    if(sel&&!tl.crop){const s=suit(tl,sel);if(s>=55){g.fillStyle=s>=75?"rgba(80,200,70,.55)":"rgba(240,200,60,.5)";diamond(q.x,q.y+TH*(1-inset)/2,TW*inset,TH*inset);g.fill();
+      if(s>=75){g.strokeStyle="rgba(255,255,255,"+(.6+.4*Math.sin(now/250))+")";g.lineWidth=2;g.stroke()}}}
+    if(dragTile===tl){g.strokeStyle="#fff";g.lineWidth=2.5;diamond(q.x,q.y+TH*(1-inset)/2,TW*inset,TH*inset);g.stroke()}
+  });
+  // crops (back to front)
+  [...p.tiles].sort((a,b)=>(a.c+a.r)-(b.c+b.r)).forEach(tl=>{if(!tl.crop)return;const q=tp(tl.c,tl.r);const st=stageOf(tl);
+    if(st>=4){g.fillStyle="rgba(233,180,60,.35)";diamond(q.x,q.y+TH*.07,TW*.86,TH*.86);g.fill()}
+    drawCrop(g,tl.crop,q.x,q.y+TH*.62,TW/52,st)});
+  // icons
+  const bob=matchMedia("(prefers-reduced-motion:reduce)").matches?0:Math.sin(now/300)*2.5;
+  p.tiles.forEach(tl=>{const q=tp(tl.c,tl.r);const ix=q.x,iy=q.y-TH*.55+bob,R=Math.max(9,TW*.17);
+    let kind=null;if(thirsty(tl))kind="w";else if(tl.wait&&tl.crop)kind="c";else if(ready(tl)&&S.tool==="sickle")kind="h";
+    if(!kind)return;g.fillStyle=css("--surface");g.beginPath();g.arc(ix,iy,R,0,7);g.fill();g.strokeStyle=kind==="w"?css("--water"):kind==="h"?css("--sun"):"#8AA";g.lineWidth=2;g.stroke();
+    g.beginPath();g.moveTo(ix-3,iy+R-1);g.lineTo(ix,iy+R+5);g.lineTo(ix+3,iy+R-1);g.fillStyle=css("--surface");g.fill();
+    if(kind==="w"){g.fillStyle=css("--water");g.beginPath();g.moveTo(ix,iy-R*.6);g.quadraticCurveTo(ix+R*.55,iy+R*.05,ix,iy+R*.5);g.quadraticCurveTo(ix-R*.55,iy+R*.05,ix,iy-R*.6);g.fill()}
+    else if(kind==="c"){g.fillStyle="#8FA6B5";[[-3,1,4],[2,-1,5],[5,2,3.5]].forEach(b=>{g.beginPath();g.arc(ix+b[0]*R/9,iy+b[1]*R/9,b[2]*R/9,0,7);g.fill()})}
+    else{g.strokeStyle=css("--sun");g.lineWidth=2.4;g.beginPath();g.arc(ix+1,iy+1,R*.5,Math.PI*1.1,Math.PI*1.95);g.stroke()}});
+  // floating text
+  for(let i=fx.length-1;i>=0;i--){const f=fx[i];const a=(now-f.t)/1100;if(a>1){fx.splice(i,1);continue}
+    g.globalAlpha=1-a;g.font="800 15px "+css("--f-display");g.textAlign="center";g.fillStyle=f.col;g.strokeStyle="rgba(0,0,0,.35)";g.lineWidth=3;g.strokeText(f.s,f.x,f.y-a*30);g.fillText(f.s,f.x,f.y-a*30);g.globalAlpha=1}
+}
+function loop(now){requestAnimationFrame(loop);try{if(!$("#scr-main").hidden&&S.tab==="farm"){if(cv.clientWidth&&Math.abs(cv.clientWidth-W)>1)sizeFarm();if(W>40)drawFarm(now)}if(!$("#scr-welcome").hidden)drawWelcome(now)}catch(err){console.error(err)}}
+function floatAt(tl,s,col){const q=tp(tl.c,tl.r);fx.push({x:q.x,y:q.y,s,col:col||"#FFD45A",t:performance.now()})}
+
+/* ---------------- welcome canvas (sample farm scene) ---------------- */
+const wcv=$("#welcomeCanvas"),wg=wcv.getContext("2d");let wSample=null;
+function drawWelcome(now){
+  const d=devicePixelRatio||1,r=wcv.getBoundingClientRect();if(wcv.width!==Math.round(r.width*d)||wcv.height!==Math.round(r.height*d)){wcv.width=r.width*d;wcv.height=r.height*d}
+  wg.setTransform(d,0,0,d,0,0);wg.clearRect(0,0,r.width,r.height);
+  const w=r.width,h=r.height;if(w<40||h<60)return;const tw=Math.min(w/7.5,(h-30)/4.2,70),th=tw/2,cx=w/2,cy=Math.max(20,(h-4*th*1.9)/2+10);
+  const M=4;const tpt=(c,rr)=>({x:cx+(c-rr)*tw/2,y:cy+(c+rr)*th/2});
+  const T0=tpt(-.5,-.5),R0=tpt(M+.5,-.5),B0=tpt(M+.5,M+.5),L0=tpt(-.5,M+.5),dd=tw*.3;
+  wg.fillStyle=css("--soil-dk");wg.beginPath();wg.moveTo(L0.x,L0.y);wg.lineTo(B0.x,B0.y);wg.lineTo(R0.x,R0.y);wg.lineTo(R0.x,R0.y+dd);wg.lineTo(B0.x,B0.y+dd);wg.lineTo(L0.x,L0.y+dd);wg.fill();
+  wg.fillStyle=css("--grass");wg.beginPath();wg.moveTo(T0.x,T0.y);wg.lineTo(R0.x,R0.y);wg.lineTo(B0.x,B0.y);wg.lineTo(L0.x,L0.y);wg.fill();
+  const crops=["grape","grape","tomato","olive","grape","date","tomato","wheat","olive","grape","cucumber","grape","tomato","sorghum","olive","grape"];
+  for(let i=0;i<16;i++){const c=i%4,rr=i>>2,q=tpt(c,rr);wg.fillStyle=css("--soil");wg.beginPath();wg.moveTo(q.x,q.y+th*.08);wg.lineTo(q.x+tw*.43,q.y+th/2);wg.lineTo(q.x,q.y+th*.92);wg.lineTo(q.x-tw*.43,q.y+th/2);wg.fill()}
+  for(let s=0;s<=6;s++)for(let i=0;i<16;i++){const c=i%4,rr=i>>2;if(c+rr!==s)continue;const q=tpt(c,rr);const st=((i*5+Math.floor(now/1400))%5);drawCrop(wg,crops[i],q.x,q.y+th*.62,tw/52,i%3===0?4:Math.max(2,st))}
+}
+
+/* ---------------- sidebar ---------------- */
+function renderSidebar(){
+  const p=P(),sb=$("#sidebar");sb.innerHTML="";
+  p.crops.forEach(id=>{const ts=p.tiles.filter(x=>x.crop===id);const nw=ts.filter(thirsty).length,nr=ts.filter(ready).length;
+    let st=t("tapToPlant");if(nr)st=t("readyN");else if(nw)st=t("needsWater");else if(ts.length){const d=ts.map(harvestDate).sort((a,b)=>a-b)[0];st=t("harvestOn",{d:fmtDate(d)})}
+    const b=document.createElement("button");b.className="sb-crop";b.setAttribute("aria-pressed",S.sel===id);b.dataset.crop=id;
+    b.innerHTML=`<canvas></canvas><b>${cName(id)}</b><small>${st}</small>${nw?`<span class="badge w">${nw}</span>`:nr?`<span class="badge h">${nr}</span>`:""}`;
+    sb.appendChild(b);cropIcon(b.querySelector("canvas"),id)});
+  sb.insertAdjacentHTML("beforeend",`<div class="sb-sep"></div>
+   <button class="tool" data-tool="water" aria-pressed="${S.tool==="water"}"><svg viewBox="0 0 32 32"><path d="M6 13h14l-2 12H8Z" fill="${css("--water")}"/><path d="M20 16l8-6" stroke="${css("--water")}" stroke-width="3" stroke-linecap="round"/><path d="M9 13a4 4 0 0 1 8 0" fill="none" stroke="${css("--water")}" stroke-width="2.4"/><circle cx="29" cy="14" r="1.4" fill="${css("--water")}"/><circle cx="27" cy="17" r="1.2" fill="${css("--water")}"/></svg>${t("water")}</button>
+   <button class="tool" id="toolSickle" data-tool="sickle" aria-pressed="${S.tool==="sickle"}">${sickleSVG()}${t("sickle")}</button>
+   <button class="tool" data-tool="topo" aria-pressed="${S.topo}"><svg viewBox="0 0 32 32" fill="none" stroke="${css("--olive")}" stroke-width="2.2" stroke-linejoin="round"><path d="M3 24l8-12 6 8 4-5 8 9Z"/><path d="M3 28h26" stroke="${css("--water")}"/></svg>${t("topo")}</button>`);
+}
+function sickleSVG(){return`<svg viewBox="0 0 32 32"><path d="M8 26l6-7" stroke="#7A5131" stroke-width="4" stroke-linecap="round"/><path d="M13 20C10 10 18 3 27 6c-6 0-11 5-10 13Z" fill="#B9C2C8" stroke="#6D777E" stroke-width="1.2"/></svg>`}
+
+/* ---------------- HUD & tabs ---------------- */
+function grade(){const p=P();const set=new Set(p.tiles.filter(x=>x.crop).map(x=>x.crop));const n=set.size,d=[...set].filter(i=>CROPS[i].dt).length;const sc=n+(d>=2?1:0);return{g:sc>=5?"A":sc>=4?"B":sc>=3?"C":sc>=2?"D":"F",n,d}}
+function renderHUD(){const p=P();$("#plotName").textContent=p.name;$("#plotMeta").textContent=`${p.region} · ${p.area} ${t("dunum")} ▾`;$("#rpVal").textContent=S.rp;$("#gradeVal").textContent=grade().g;
+  $("#wxChip").innerHTML=S.rainSoon?`<svg viewBox="0 0 24 24" width="16" height="16"><path d="M7 15a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1A4 4 0 0 1 17 15Z" fill="${css("--water")}"/><path d="M9 18l-1 3M13 18l-1 3" stroke="${css("--water")}" stroke-width="2"/></svg><span class="mono">${p.valley?24:17}°</span> ${t("rainIn")}`:`<svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="5" fill="${css("--sun")}"/></svg><span class="mono">${p.valley?29:21}°</span> ${t("dry")}`;
+  const n=openAlerts().length;$("#alertCount").textContent=n;$("#alertCount").hidden=!n;
+  const fr=S.alerts.find(a=>a.id==="frost");const frOpen=fr.done.length<fr.acts.length;$("#vignette").classList.toggle("on",frOpen);
+  const bn=$("#banner");bn.hidden=!frOpen;if(frOpen)bn.innerHTML=`<span class="sev"></span><div style="min-width:0"><b>${t("frostBanner")}</b><small>−1 °C · ECOSTRESS</small></div><button class="btn sm" data-act="goAlerts">${t("seeWhat")}</button>`;
+}
+function setHint(s){const h=$("#hint");h.hidden=!s;if(s)h.textContent=s}
+function refreshHint(){if(S.sel)setHint(t("pickSpot",{c:cName(S.sel)}));else if(S.tool==="sickle")setHint(t("dragHint"));else if(S.tool==="water")setHint(t("waterHint"));else if(S.topo)setHint(t("topoHint"));else setHint("")}
+function renderAll(){applyI18n();if(!$("#scr-main").hidden){renderHUD();renderSidebar();refreshHint();renderTab()}if(!$("#scr-onboard").hidden)renderOnboard()}
+function switchTab(tab){S.tab=tab;$$(".tab").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===tab));["farm","plan","spray","alerts","more"].forEach(k=>$("#tab-"+k).hidden=k!==tab);renderTab();if(tab==="farm")requestAnimationFrame(sizeFarm)}
+function renderTab(){({plan:renderPlan,spray:renderSpray,alerts:renderAlerts,more:renderMore}[S.tab]||(()=>{}))()}
+
+/* ---------------- toast / sheet ---------------- */
+let toastT;function toast(s){const l=$("#layer");l.querySelector(".toast")?.remove();const d=document.createElement("div");d.className="toast";d.textContent=s;l.appendChild(d);clearTimeout(toastT);toastT=setTimeout(()=>d.remove(),2400)}
+function sheet(html){closeSheet();$("#layer").insertAdjacentHTML("beforeend",`<div class="backdrop" data-act="closeSheet"></div><div class="sheet pad" role="dialog"><div class="grab"></div>${html}</div>`)}
+function closeSheet(){$("#layer .backdrop")?.remove();$("#layer .sheet")?.remove()}
+function addRP(n){S.rp+=n;$("#rpVal").textContent=S.rp;const c=$("#rpChip");c.animate?.([{transform:"scale(1.18)"},{transform:"scale(1)"}],{duration:300})}
+
+/* ---------------- farm interaction ---------------- */
+function tileLabel(tl){return t("plotInfo",{c:"ABCDEF"[tl.c],r:tl.r+1})}
+function waterTile(tl){tl.moist=.9;tl.wait=false;const mm=Math.round(CROPS[tl.crop].water/3);addRP(5);floatAt(tl,"+5","#7CC8FF");toast(t("watered",{mm,p:5}))}
+function onTileTap(tl){
+  const p=P();
+  if(S.sel){if(tl.crop){toast(t("occupied"));return}const s=suit(tl,S.sel);tl.crop=S.sel;tl.age=0;tl.moist=.8;const pts=s>=75?10:s>=55?5:2;addRP(pts);floatAt(tl,"+"+pts);toast(s>=55?t("planted",{c:cName(S.sel),p:pts}):t("plantedPoor",{p:pts}));renderSidebar();renderHUD();return}
+  if(thirsty(tl)){
+    if(S.rainSoon&&!S.rainAsked){const m=Math.round(p.tiles.filter(thirsty).length*p.area/36*8);
+      sheet(`<div class="stack"><div class="row"><svg viewBox="0 0 24 24" width="40" height="40"><path d="M7 15a4 4 0 0 1 0-8 5 5 0 0 1 9.6-1A4 4 0 0 1 17 15Z" fill="${css("--water")}"/><path d="M9 18l-1 3M13 18l-1 3M17 18l-1 3" stroke="${css("--water")}" stroke-width="2"/></svg><h2 style="font-size:24px">${t("holdOff")}</h2></div>
+      <p style="margin:0">${t("holdOffBody",{mm:9,m})}</p><span class="tag">GPM IMERG · ${t("updated",{d:fmtDate(new Date())})}</span>
+      <button class="btn water block" data-act="waitRain">${t("waitRain")}</button><button class="btn ghost block" data-act="waterAnyway" data-i="${p.tiles.indexOf(tl)}">${t("waterAnyway")}</button></div>`);return}
+    waterTile(tl);renderSidebar();return}
+  // info sheet
+  if(!tl.crop){const best=Object.keys(CROPS).map(id=>[id,suit(tl,id)]).sort((a,b)=>b[1]-a[1]).slice(0,3);
+    sheet(`<div class="stack"><h2 style="font-size:22px">${tileLabel(tl)} · ${t("emptyPlot")}</h2>
+    <div class="profile"><div class="metric"><b class="mono">${Math.round(tl.moist*40)}%</b><span>${t("moist")}</span></div><div class="metric"><b>${tl.low?t("low"):t("flat")}</b><span>${t("elev")} · SRTM</span></div></div>
+    <span class="label">${t("bestFor")}</span>${best.map(([id,s])=>`<div class="row"><canvas data-icon="${id}" style="width:36px;height:36px"></canvas><div style="flex:1"><b>${cName(id)}</b><div class="bar"><i style="width:${s}%;background:${s>=75?css("--ok"):s>=55?css("--warn"):css("--danger")}"></i></div></div><span class="mono">${s}%</span></div>`).join("")}
+    <button class="btn ghost block" data-act="closeSheet">${t("close")}</button></div>`);$$("#layer canvas[data-icon]").forEach(c=>cropIcon(c,c.dataset.icon));return}
+  const st=stageOf(tl);const ndvi=(st>=4?.42:.25+st*.13).toFixed(2);
+  sheet(`<div class="stack"><div class="row"><canvas data-icon="${tl.crop}" data-st="${st}" style="width:56px;height:56px"></canvas><div><h2 style="font-size:22px">${cName(tl.crop)}</h2><span class="muted">${tileLabel(tl)}</span></div></div>
+   <div class="profile"><div class="metric"><b class="mono">${t("days",{n:tl.age})}</b><span>${t("age")}</span></div><div class="metric"><b class="mono">${ndvi}</b><span>${t("ndvi")}</span></div>
+   <div class="metric"><b class="mono">${Math.round(tl.moist*40)}%</b><span>${t("moist")}</span></div><div class="metric"><b>${ready(tl)?t("readyNow"):fmtDate(harvestDate(tl))}</b><span>${t("harvestDates")}</span></div></div>
+   <div class="row between"><span>${t("suit")}</span><b class="mono">${suit(tl,tl.crop)}%</b></div>
+   ${tl.low&&CROPS[tl.crop].frost?`<div class="note"><b>!</b><span>${L(["Low-lying plot: cold air collects here on frost nights.","قطعة منخفضة: يتجمع الهواء البارد هنا في ليالي الصقيع."])}</span></div>`:""}
+   <button class="btn ghost block" data-act="closeSheet">${t("close")}</button></div>`);
+  $$("#layer canvas[data-icon]").forEach(c=>cropIcon(c,c.dataset.icon,+c.dataset.st));
+}
+let downInfo=null;
+cv.addEventListener("pointerdown",e=>{const r=cv.getBoundingClientRect();downInfo={x:e.clientX-r.left,y:e.clientY-r.top}});
+cv.addEventListener("pointerup",e=>{if(!downInfo)return;const r=cv.getBoundingClientRect();const x=e.clientX-r.left,y=e.clientY-r.top;if(Math.hypot(x-downInfo.x,y-downInfo.y)<10){const tl=pick(x,y);if(tl)onTileTap(tl);else if(S.sel){S.sel=null;renderSidebar();refreshHint()}}downInfo=null});
+
+/* sickle: tap = dates sheet, long-press = drag harvest */
+let lpTimer=null,dragging=false,dragEl=null,harvestCount=0;
+function sickleDown(e){const btn=e.currentTarget;lpTimer=setTimeout(()=>{dragging=true;harvestCount=0;S.tool="sickle";S.sel=null;btn.setAttribute("aria-pressed","true");refreshHint();
+  dragEl=document.createElement("div");dragEl.className="drag-sickle";dragEl.innerHTML=sickleSVG();document.body.appendChild(dragEl);moveDrag(e);navigator.vibrate?.(15)},380)}
+function moveDrag(e){if(!dragging)return;dragEl.style.left=e.clientX+"px";dragEl.style.top=e.clientY+"px";const r=cv.getBoundingClientRect();const tl=pick(e.clientX-r.left,e.clientY-r.top-18);dragTile=tl;
+  if(tl&&ready(tl)){const pts=8;tl.crop=null;tl.age=0;tl.moist=Math.max(.3,tl.moist-.1);harvestCount++;addRP(pts);floatAt(tl,"+"+pts)}}
+function upDrag(){clearTimeout(lpTimer);if(dragging){dragging=false;dragEl?.remove();dragTile=null;if(harvestCount)toast(t("harvested",{n:harvestCount,p:harvestCount*8}));renderSidebar();renderHUD();return true}return false}
+window.addEventListener("pointermove",e=>{if(dragging){e.preventDefault();moveDrag(e)}},{passive:false});
+window.addEventListener("pointerup",e=>{if(dragging){upDrag();e.stopPropagation();suppressClick=true}else clearTimeout(lpTimer)});
+let suppressClick=false;
+
+function showHarvestDates(){const p=P();const groups={};p.tiles.filter(x=>x.crop).forEach(tl=>{(groups[tl.crop]=groups[tl.crop]||[]).push(tl)});
+  sheet(`<div class="stack"><div class="row">${sickleSVG().replace("<svg","<svg width=\"36\" height=\"36\"")}<h2 style="font-size:24px">${t("harvestDates")}</h2></div>
+  <div class="note info"><span>${t("sickleHow")}</span></div>
+  ${Object.keys(groups).map(id=>{const ts=groups[id];const r=ts.filter(ready).length;const nx=ts.filter(x=>!ready(x)).map(harvestDate).sort((a,b)=>a-b)[0];
+    return`<div class="row"><canvas data-icon="${id}" style="width:40px;height:40px"></canvas><div style="flex:1"><b>${cName(id)}</b><div class="muted" style="font-size:13px">${ts.length} · NDVI (MODIS)</div></div><div style="text-align:end">${r?`<span class="chip" style="background:var(--sun-soft)">${t("readyNow")} · ${r}</span>`:""}${nx?`<div class="mono" style="font-size:13px">${fmtDate(nx)}</div>`:""}</div></div>`}).join("")}
+  <button class="btn ghost block" data-act="closeSheet">${t("close")}</button></div>`);$$("#layer canvas[data-icon]").forEach(c=>cropIcon(c,c.dataset.icon))}
+
+/* ---------------- simulate week ---------------- */
+function simWeek(){const p=P();let rained=false;p.tiles.forEach(tl=>{if(!tl.crop){tl.moist=Math.max(.2,tl.moist-.05);return}tl.age+=7;tl.moist-=CROPS[tl.crop].water/100*.7});
+  if(S.rainSoon){rained=true;p.tiles.forEach(tl=>{tl.moist=Math.min(.95,tl.moist+.4);tl.wait=false})}
+  S.rainSoon=!S.rainSoon;S.rainAsked=false;toast(rained?t("rained",{mm:9}):t("weekPassed"));renderHUD();renderSidebar()}
+
+/* ---------------- plan tab ---------------- */
+function renderPlan(){const p=P();const mNow=new Date().getMonth();const months=[...Array(12)].map((_,i)=>new Date(2026,i,1).toLocaleDateString(loc(),{month:"narrow"}));
+  const need=Math.round(p.tiles.filter(x=>x.crop).reduce((s,x)=>s+CROPS[x.crop].water,0)*p.area/36*1.0);const avail=p.water;const mx=Math.max(need,avail)*1.1;
+  const gr=grade();const locked=["sorghum","wheat"].filter(id=>!p.crops.includes(id));
+  $("#tab-plan").innerHTML=`<div class="stack">
+  <div class="sec-title"><h2>${t("calendar")}</h2><span class="tag">${p.region}</span></div>
+  <div class="note info"><span>${t("lateSpring")}</span></div>
+  <div class="cal"><table><thead><tr><th></th>${months.map((m,i)=>`<th${i===mNow?' style="color:var(--danger)"':""}>${m}</th>`).join("")}</tr></thead><tbody>
+  ${p.crops.map(id=>{const cells=Array(12).fill("");CROPS[id].cal.forEach(([a,b,k])=>{for(let i=a;i<b;i++)cells[i%12]=k});return`<tr><td class="name">${cName(id)}</td>${cells.map((k,i)=>`<td class="${k?"seg-"+k:""}${i===mNow?" now":""}" style="${k?"":"background:var(--surface-2)"}"></td>`).join("")}</tr>`}).join("")}
+  </tbody></table></div>
+  <div class="legend"><span><i style="background:var(--leaf);opacity:.55"></i>${t("lgPlant")}</span><span><i style="background:var(--leaf)"></i>${t("lgGrow")}</span><span><i style="background:var(--sun)"></i>${t("lgHarv")}</span><span><i style="background:var(--danger);width:3px"></i>${t("lgNow")}</span></div>
+
+  <div class="sec-title" style="margin-top:8px"><h2>${t("waterBudget")}</h2><span class="tag">SMAP · GPM</span></div>
+  <div class="card stack" style="gap:10px">
+   <div class="wbar"><span>${t("need")}</span><div class="track"><i style="width:${need/mx*100}%;background:${need>avail?css("--danger"):css("--water")}"></i></div><b class="mono">${need} m³</b></div>
+   <div class="wbar"><span>${t("avail")}</span><div class="track"><i style="width:${avail/mx*100}%;background:var(--ok)"></i></div><b class="mono">${avail} m³</b></div>
+   <div class="note ${need>avail?"":"ok"}" style="font-size:13px"><span>${need>avail?t("overBudget",{m:need-avail}):t("inBudget",{m:avail-need})}</span></div>
+  </div>
+
+  <div class="sec-title" style="margin-top:8px"><h2>${t("seedBank")}</h2><span class="tag">NASA POWER</span></div>
+  <div class="card row" style="gap:16px"><div class="grade-big">${gr.g}</div><div><b>${t("resilience")}</b><div class="muted" style="font-size:14px">${t("gradeWhy",{n:gr.n,d:gr.d})}</div></div></div>
+  <div class="note"><span>${t("dryTrend")}</span></div>
+  ${["sorghum","wheat","olive"].map(id=>`<div class="rec" aria-pressed="false"><canvas data-icon="${id}"></canvas><div><b>${cName(id)}</b><div class="muted" style="font-size:13px">${t("waterUse",{w:CROPS[id].water})}${CROPS[id].dt?" · "+L(["drought-tolerant","يتحمل الجفاف"]):""}</div></div>
+    ${p.crops.includes(id)?`<span class="chip">${t("added")}</span>`:`<button class="btn sm" data-act="unlock" data-id="${id}">${t("unlock")}</button>`}</div>`).join("")}
+  </div>`;$$("#tab-plan canvas[data-icon]").forEach(c=>cropIcon(c,c.dataset.icon))}
+
+/* ---------------- spray tab ---------------- */
+function sprayData(){const r=rng(31),out=[];for(let d=0;d<3;d++){for(let h=0;h<8;h++){const hr=h*3;let wind=Math.round(4+r()*9+(hr>=12&&hr<=18?8:0)+(d===1?6:0));let rain=d===2&&hr>=9&&hr<=18?60+Math.round(r()*25):Math.round(r()*20);const temp=Math.round(14+Math.sin((hr-6)/24*Math.PI*2)*8+(P().valley?7:0));
+  let z="g",why="";if(wind>15)z="r",why=t("whyWind",{w:wind});else if(rain>50)z="r",why=t("whyRain",{p:rain});else if(wind>=10)z="y",why=t("whyWind",{w:wind});else if(temp>=30)z="y",why=t("whyHot",{t:temp});
+  out.push({d,h:hr,wind,rain,temp,z,why})}}return out}
+function renderSpray(){const data=sprayData();const days=[0,1,2].map(i=>{const d=new Date();d.setDate(d.getDate()+i);return i?d.toLocaleDateString(loc(),{weekday:"short"}):t("today")});
+  const icon=z=>z==="g"?`<svg viewBox="0 0 16 16"><path d="M3 8l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2.4"/></svg>`:z==="r"?`<svg viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="2.4"/></svg>`:`<svg viewBox="0 0 16 16"><path d="M8 3v6M8 12v1" stroke="currentColor" stroke-width="2.4"/></svg>`;
+  $("#tab-spray").innerHTML=`<div class="stack"><div class="sec-title"><h2>${t("sprayTitle")}</h2><span class="tag">NASA POWER</span></div>
+  <p class="muted" style="margin:-6px 0 0;font-size:14px">${t("spraySub")}</p>
+  <div class="seg" id="sprayTool"><button data-v="drone" aria-pressed="${S.spray.tool==="drone"}">${t("drone")}</button><button data-v="tractor" aria-pressed="${S.spray.tool==="tractor"}">${t("tractor")}</button></div>
+  <div style="overflow-x:auto"><div class="spray-grid" style="min-width:340px"><span></span>${[0,3,6,9,12,15,18,21].map(h=>`<span class="h mono">${String(h).padStart(2,"0")}</span>`).join("")}
+  ${[0,1,2].map(d=>`<span class="d">${days[d]}</span>`+data.filter(x=>x.d===d).map((x,i)=>`<button class="slot ${x.z}${S.spray.slot===d*8+i?" sel":""}" data-slot="${d*8+i}" aria-label="${days[d]} ${x.h}:00">${icon(x.z)}<span class="mono">${x.wind}</span></button>`).join("")).join("")}
+  </div></div>
+  <div class="legend"><span><i style="background:var(--ok)"></i>${t("lgSafe")}</span><span><i style="background:var(--warn)"></i>${t("lgCaution")}</span><span><i style="background:var(--danger)"></i>${t("lgNo")}</span><span class="mono">km/h</span></div>
+  <div id="sprayMsg"></div></div>`;S._spray=data;S._days=days}
+
+/* ---------------- alerts tab ---------------- */
+function renderAlerts(){const sevCol={frost:"var(--frost)",water:"var(--water)",danger:"var(--danger)"};
+  $("#tab-alerts").innerHTML=`<div class="stack"><div><h2 style="font-size:22px">${t("alertsTitle")}</h2><p class="muted" style="margin:4px 0 0;font-size:14px">${t("alertsSub")}</p></div>
+  ${S.alerts.map(a=>{const res=a.done.length===a.acts.length;return`<div class="alert${res?" resolved":""}"><span class="sev" style="background:${sevCol[a.sev]}"></span><div class="stack" style="gap:10px;min-width:0">
+   <div class="row between" style="align-items:flex-start"><h3>${L(a.title)}</h3>${res?`<span class="chip" style="background:var(--ok-soft)">${t("resolved")}</span>`:""}</div>
+   <p style="margin:0;font-size:14px">${L(a.body)}</p>
+   <div class="row" style="flex-wrap:wrap;gap:6px"><span class="tag">${a.src}</span><span class="tag">${t("conf",{p:a.conf})}</span></div>
+   ${a.acts.map((x,i)=>{const dn=a.done.includes(i);return`<div class="act${dn?" done":""}"><span>${L(x)}</span>${dn?`<span class="mono" style="color:var(--ok)">✓</span>`:`<button class="btn sm" data-act="deploy" data-a="${a.id}" data-i="${i}">${t("deploy")} · +20</button>`}</div>`}).join("")}
+  </div></div>`}).join("")}</div>`}
+
+/* ---------------- more tab ---------------- */
+function renderMore(){const today=fmtDate(new Date());
+  const srcs=[["NASA POWER",L(["Temperature, wind, humidity, rain history","الحرارة والرياح والرطوبة وسجل الأمطار"])],["SMAP",L(["Root-zone soil moisture","رطوبة التربة في منطقة الجذور"])],["GPM IMERG",L(["Rain forecast and totals","توقعات الأمطار وكمياتها"])],["MODIS / Landsat NDVI",L(["Crop health and harvest readiness","صحة المحصول وجاهزيته للحصاد"])],["SRTM",L(["Elevation, slopes, low spots","الارتفاع والمنحدرات والمناطق المنخفضة"])],["ECOSTRESS",L(["Land surface temperature","حرارة سطح الأرض"])]];
+  $("#tab-more").innerHTML=`<div class="stack">
+  <div class="sec-title"><h2>${t("language")}</h2></div>
+  <div class="seg" id="langSeg"><button data-v="en" aria-pressed="${LANG==="en"}">English</button><button data-v="ar" aria-pressed="${LANG==="ar"}">العربية</button></div>
+  <div class="sec-title"><h2>${t("myPlots")}</h2></div>
+  ${S.plots.map((p,i)=>`<button class="list-item${i===S.cur?" on":""}" data-act="switchPlot" data-i="${i}"><div style="flex:1;min-width:0"><b>${p.name}</b><div class="muted" style="font-size:13px">${p.region} · ${p.area} ${t("dunum")} · <span class="mono">${p.lat.toFixed(2)}, ${p.lon.toFixed(2)}</span></div></div><span class="mono">${p.crops.length}</span></button>`).join("")}
+  <button class="btn ghost" data-act="startOnboard">+ ${t("addPlot")}</button>
+  <div class="sec-title"><h2>${t("dataSources")}</h2></div>
+  <div class="card" style="padding-block:4px">${srcs.map(s=>`<div class="src-row"><b>${s[0]}</b><span class="tag">${t("updated",{d:today})}</span><span class="muted" style="grid-column:1/-1">${s[1]}</span></div>`).join("")}</div>
+  <button class="btn ghost" data-act="tutorial">${t("replay")}</button>
+  <p class="muted" style="font-size:13px;margin:0">${t("about")}</p></div>`}
+
+/* ---------------- onboarding ---------------- */
+const OB={step:1,lat:31.95,lon:35.93,area:60,unit:"du",fitted:null,soil:"",irr:"irr",pri:"water",prev:new Set(["tomato"]),keep:new Set(),picks:new Set(),loaded:false};
+const mcv=$("#mapCanvas"),mg=mcv.getContext("2d");
+const LAT0=32.8,LAT1=31.5,LON0=35.4,LON1=36.2;
+const toXY=(lat,lon,w,h)=>({x:(lon-LON0)/(LON1-LON0)*w,y:(LAT0-lat)/(LAT0-LAT1)*h});
+function drawMap(){const d=devicePixelRatio||1,r=mcv.getBoundingClientRect(),w=r.width,h=r.height;mcv.width=w*d;mcv.height=h*d;mg.setTransform(d,0,0,d,0,0);
+  const dark=getComputedStyle(document.documentElement).colorScheme==="dark";
+  mg.fillStyle=dark?"#2A2A1E":"#E9DFC4";mg.fillRect(0,0,w,h);
+  // highlands texture
+  const rr=rng(5);for(let i=0;i<70;i++){mg.fillStyle=dark?"rgba(255,255,255,.035)":"rgba(140,110,60,.08)";mg.beginPath();mg.ellipse(w*(.35+rr()*.7),h*rr(),20+rr()*40,10+rr()*20,rr()*3,0,7);mg.fill()}
+  // valley strip
+  const river=[[32.72,35.57],[32.6,35.56],[32.45,35.58],[32.3,35.55],[32.15,35.54],[32.0,35.53],[31.85,35.54],[31.77,35.55]];
+  mg.strokeStyle=dark?"rgba(110,160,70,.35)":"rgba(120,170,70,.45)";mg.lineWidth=w*.13;mg.lineCap="round";mg.lineJoin="round";mg.beginPath();river.forEach((p,i)=>{const q=toXY(p[0],p[1]+.03,w,h);i?mg.lineTo(q.x,q.y):mg.moveTo(q.x,q.y)});mg.stroke();
+  mg.strokeStyle="#4C93C6";mg.lineWidth=2.5;mg.beginPath();river.forEach((p,i)=>{const q=toXY(p[0],p[1],w,h);i?mg.lineTo(q.x,q.y):mg.moveTo(q.x,q.y)});mg.stroke();
+  // Dead Sea + Tiberias
+  const ds=toXY(31.6,35.5,w,h);mg.fillStyle="#5BA0D0";mg.beginPath();mg.ellipse(ds.x,ds.y,w*.05,h*.1,0,0,7);mg.fill();
+  const tb=toXY(32.78,35.59,w,h);mg.beginPath();mg.ellipse(tb.x,tb.y,w*.035,h*.035,0,0,7);mg.fill();
+  // roads
+  mg.strokeStyle=dark?"rgba(255,255,255,.18)":"rgba(90,70,40,.25)";mg.lineWidth=1.5;mg.setLineDash([5,4]);mg.beginPath();[[32.55,35.85],[32.07,35.9],[31.95,35.93]].forEach((p,i)=>{const q=toXY(p[0],p[1],w,h);i?mg.lineTo(q.x,q.y):mg.moveTo(q.x,q.y)});mg.stroke();mg.setLineDash([]);
+  // labels
+  const lab=(lat,lon,en,ar,big)=>{const q=toXY(lat,lon,w,h);mg.fillStyle=dark?"#E9EFDE":"#3A3324";mg.beginPath();mg.arc(q.x,q.y,big?4:3,0,7);mg.fill();mg.font=`${big?700:600} ${big?13:12}px ${css("--f-body")}`;mg.textAlign="left";mg.fillText(LANG==="ar"?ar:en,q.x+6,q.y+4)};
+  lab(32.55,35.85,"Irbid","إربد");lab(31.95,35.93,"Amman","عمّان",1);lab(32.07,36.09,"Zarqa","الزرقاء");
+  mg.font=`italic 600 11px ${css("--f-body")}`;mg.fillStyle="#3D7FB0";const gl=toXY(32.38,35.6,w,h);mg.save();mg.translate(gl.x,gl.y);mg.rotate(-Math.PI/2.2);mg.textAlign="center";mg.fillText(LANG==="ar"?"الغور الشمالي":"North Ghor",0,0);mg.restore();
+  const dl=toXY(31.6,35.5,w,h);mg.fillStyle="#fff";mg.textAlign="center";mg.fillText(LANG==="ar"?"البحر الميت":"Dead Sea",dl.x,dl.y+3);
+  // pin + area
+  const q=toXY(OB.lat,OB.lon,w,h);const R=10+Math.sqrt(OB.area)*2.4;
+  mg.fillStyle="rgba(71,103,42,.18)";mg.strokeStyle="#47672A";mg.lineWidth=2;mg.setLineDash([6,4]);mg.beginPath();mg.arc(q.x,q.y,R,0,7);mg.fill();mg.stroke();mg.setLineDash([]);
+  if(OB.fitted){mg.fillStyle="rgba(217,142,31,.35)";mg.strokeStyle="#D98E1F";mg.lineWidth=2.5;mg.beginPath();OB.fitted.forEach((f,i)=>{const x=q.x+Math.cos(f[0])*R*f[1],y=q.y+Math.sin(f[0])*R*f[1];i?mg.lineTo(x,y):mg.moveTo(x,y)});mg.closePath();mg.fill();mg.stroke()}
+  mg.fillStyle="#fff";mg.beginPath();mg.arc(q.x,q.y,9,0,7);mg.fill();mg.fillStyle="#2F7FB5";mg.beginPath();mg.arc(q.x,q.y,6,0,7);mg.fill();
+  $("#coords").textContent=`${OB.lat.toFixed(3)}° N, ${OB.lon.toFixed(3)}° E`}
+mcv.addEventListener("pointerdown",e=>{const r=mcv.getBoundingClientRect();OB.lon=LON0+(e.clientX-r.left)/r.width*(LON1-LON0);OB.lat=LAT0-(e.clientY-r.top)/r.height*(LAT0-LAT1);OB.fitted=null;drawMap();renderAreaOut()});
+function renderAreaOut(){const a=OB.area;$("#areaOut").textContent=OB.unit==="du"?`${a} ${t("dunum")}`:`${(a/10).toFixed(1)} ${t("hectare")}`;$("#areaAlt").textContent=OB.unit==="du"?`= ${(a/10).toFixed(1)} ${t("hectare")}`:`= ${a} ${t("dunum")}`;
+  $("#fitOut").textContent=OB.fitted?t("fitDone",{a:(a*.94).toFixed(1)}):t("fitTodo")}
+$("#areaRange").addEventListener("input",e=>{OB.area=+e.target.value;OB.fitted=null;drawMap();renderAreaOut()});
+const inValley=()=>OB.lon<35.66;
+function chipsFor(el,set,ids){el.innerHTML=ids.map(id=>`<button class="chip toggle" data-id="${id}" aria-pressed="${set.has(id)}">${cName(id)}</button>`).join("");el.onclick=e=>{const b=e.target.closest("button");if(!b)return;const id=b.dataset.id;set.has(id)?set.delete(id):set.add(id);b.setAttribute("aria-pressed",set.has(id))}}
+function renderOnboard(){
+  $("#obStepLabel").textContent=t("stepOf",{n:OB.step});[1,2,3].forEach(i=>{$("#st"+i).classList.toggle("on",i<=OB.step);$("#ob"+i).hidden=i!==OB.step});
+  $("#obNextBtn").textContent=OB.step===1?t("next"):OB.step===2?t("analyze"):t("goFarm");$("#obNextBtn").disabled=OB.step===3&&!OB.loaded;$("#obNextBtn").style.opacity=$("#obNextBtn").disabled?.5:1;
+  if(OB.step===1){requestAnimationFrame(drawMap);renderAreaOut()}
+  if(OB.step===2){if(!$("#fName").value)$("#fName").value=inValley()?L(["Valley plot","قطعة الغور"]):L(["Highland plot","قطعة المرتفعات"]);chipsFor($("#prevChips"),OB.prev,["tomato","cucumber","wheat","grape","olive"]);chipsFor($("#keepChips"),OB.keep,["grape","olive","date","tomato"]);$("#fSoil").value=OB.soil}
+  if(OB.step===3){$("#ob3Title").textContent=OB.loaded?t("ob3Done"):t("ob3Load");$("#ob3Sub").textContent=OB.loaded?t("ob3DoneSub"):t("ob3LoadSub");if(OB.loaded)renderResults()}
+}
+function landProfile(){const v=inValley();return{elev:v?-215:780,temp:v?24.6:17.2,frost:v?3:19,rain:v?310:420,moist:v?21:26,ndvi:v?.38:.29,slope:v?1.5:6}}
+function recCrops(){const v=inValley();const pr=landProfile();let list=v?[["grape",91],["tomato",88],["date",84],["olive",76],["cucumber",73],["sorghum",68],["wheat",55]]:[["olive",90],["wheat",82],["grape",78],["sorghum",70],["tomato",58],["cucumber",50],["date",22]];
+  if(OB.pri==="water")list=list.map(([id,s])=>[id,s+(CROPS[id].dt?6:-4)]);OB.keep.forEach(id=>{if(!list.find(x=>x[0]===id))list.push([id,60])});return list.map(([id,s])=>[id,Math.min(97,s)]).sort((a,b)=>b[1]-a[1])}
+const why={grape:["Warm winters, few frost nights, high sun","شتاء دافئ، ليالي صقيع قليلة، شمس قوية"],tomato:["Valley is frost-free most of winter","الغور خالٍ من الصقيع معظم الشتاء"],date:["Hot, dry summers; tolerates salty water","صيف حار وجاف؛ يتحمل المياه المالحة"],olive:["Low water need; drought-tolerant","حاجة قليلة للمياه؛ يتحمل الجفاف"],cucumber:["Short season fits greenhouse winter crop","موسم قصير يناسب زراعة البيوت البلاستيكية شتاءً"],sorghum:["Uses a third of maize water","يستهلك ثلث مياه الذرة"],wheat:["Rain-fed winter crop","محصول شتوي بعلي"]};
+function renderResults(){$("#ob3Results").hidden=false;const pr=landProfile();
+  $("#profile").innerHTML=[[`${pr.elev} m`,"SRTM · "+L(["elevation","الارتفاع"])],[`${pr.temp} °C`,"NASA POWER · "+L(["mean temp","متوسط الحرارة"])],[`${pr.moist}%`,"SMAP · "+L(["soil moisture","رطوبة التربة"])],[`${pr.rain} mm`,"GPM · "+L(["rain per year","أمطار سنوية"])],[`${pr.frost}`,"ECOSTRESS · "+L(["frost nights / yr","ليالي صقيع / سنة"])],[pr.ndvi.toFixed(2),"MODIS · NDVI"]].map(m=>`<div class="metric"><b class="mono">${m[0]}</b><span>${m[1]}</span></div>`).join("");
+  const list=recCrops();if(!OB.picks.size){list.slice(0,4).forEach(x=>OB.picks.add(x[0]));OB.keep.forEach(id=>OB.picks.add(id))}
+  $("#recList").innerHTML=list.map(([id,s])=>`<button class="rec" data-pick="${id}" aria-pressed="${OB.picks.has(id)}" style="text-align:start"><canvas data-icon="${id}"></canvas><div style="min-width:0"><div class="row between"><b>${cName(id)}</b><span class="mono" style="font-size:13px">${s}%</span></div><div class="bar"><i style="width:${s}%;background:${s>=75?css("--ok"):s>=55?css("--warn"):css("--danger")}"></i></div><div class="muted" style="font-size:12.5px;margin-top:4px">${L(why[id])}${OB.keep.has(id)?" · "+L(["you asked to keep this","طلبت الحفاظ عليه"]):""}</div></div><span class="check"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M3 8l3 3 7-7" fill="none" stroke="#fff" stroke-width="2.4"/></svg></span></button>`).join("");
+  $$("#recList canvas").forEach(c=>cropIcon(c,c.dataset.icon))}
+function runAnalysis(){OB.loaded=false;$("#ob3Results").hidden=true;OB.picks.clear();
+  const srcs=[["NASA POWER",L(["20 years of daily weather","20 عامًا من الطقس اليومي"])],["SMAP",L(["soil moisture, 9 km grid","رطوبة التربة، شبكة 9 كم"])],["GPM IMERG",L(["rain, last 30 days + forecast","الأمطار، آخر 30 يومًا + التوقعات"])],["SRTM",L(["elevation, 30 m","الارتفاع، 30 م"])],["MODIS NDVI",L(["vegetation, 250 m","الغطاء النباتي، 250 م"])],["ECOSTRESS",L(["land surface temperature","حرارة سطح الأرض"])]];
+  $("#srcList").innerHTML=srcs.map((s,i)=>`<div class="src" id="src${i}"><span class="dot"></span><div><b>${s[0]}</b><small>${s[1]}</small></div><span class="mono muted" style="font-size:12px"></span></div>`).join("");
+  srcs.forEach((s,i)=>{setTimeout(()=>$("#src"+i)?.classList.add("loading"),i*330);setTimeout(()=>{const e=$("#src"+i);if(!e)return;e.classList.remove("loading");e.classList.add("done");e.querySelector(".mono").textContent=(0.2+((i*37)%9)/10).toFixed(1)+" s"},i*330+520)});
+  setTimeout(()=>{OB.loaded=true;renderOnboard()},srcs.length*330+700)}
+function validateStep2(){let ok=true;OB.soil=$("#fSoil").value;const b=+$("#fBudget").value;
+  $("#errSoil").hidden=!!OB.soil;$("#fSoilWrap").classList.toggle("bad",!OB.soil);if(!OB.soil)ok=false;
+  $("#errBudget").hidden=b>0;$("#fBudgetWrap").classList.toggle("bad",!(b>0));if(!(b>0))ok=false;return ok}
+function finishOnboard(){const v=inValley();const crops=[...OB.picks];if(!crops.length)crops.push(recCrops()[0][0]);
+  const p=makePlot({name:$("#fName").value.trim()||"Plot",region:v?L(["North Ghor","الغور الشمالي"]):L(["Amman highlands","مرتفعات عمّان"]),lat:OB.lat,lon:OB.lon,area:OB.area,crops,soil:OB.soil==="auto"?"loam":OB.soil,water:+$("#fWater").value||300,valley:v,seed:Math.round(OB.lat*1000)%997+3});
+  S.plots.push(p);S.cur=S.plots.length-1;S.sel=null;S.tool=null;enterMain(true)}
+
+/* ---------------- screens ---------------- */
+function show(id){["welcome","onboard","main"].forEach(k=>$("#scr-"+k).hidden=k!==id)}
+function startOnboard(){Object.assign(OB,{step:1,fitted:null,loaded:false,soil:""});OB.picks.clear();$("#fName").value="";$("#areaRange").value=OB.area;show("onboard");closeSheet();renderOnboard()}
+function enterMain(tut){show("main");switchTab("farm");renderAll();requestAnimationFrame(()=>{sizeFarm();if(tut&&!S.tutorialSeen)setTimeout(()=>coach(0),300)})}
+
+/* ---------------- tutorial coach marks ---------------- */
+const COACH=[["#sidebar .sb-crop","c1t","c1b"],["#farmCanvas","c2t","c2b"],["#toolSickle","c3t","c3b"],["#tabAlerts","c4t","c4b"],["#rpChip","c5t","c5b"]];
+function coach(i){closeCoach();if(i>=COACH.length){S.tutorialSeen=true;return}if(S.tab!=="farm")switchTab("farm");const el=$(COACH[i][0]);if(!el){coach(i+1);return}
+  const app=$("#app").getBoundingClientRect(),r=el.getBoundingClientRect();const pad=6;const l=$("#layer");
+  const ring=document.createElement("div");ring.className="coach-ring";Object.assign(ring.style,{left:r.left-app.left-pad+"px",top:r.top-app.top-pad+"px",width:r.width+pad*2+"px",height:(i===1?Math.min(r.height,app.height*.5):r.height)+pad*2+"px"});
+  const card=document.createElement("div");card.className="coach-card";const below=r.top-app.top<app.height/2&&i!==1;card.style[below?"top":"bottom"]=below?(r.bottom-app.top+16+"px"):(app.bottom-r.top+16)+"px";if(i===1){card.style.bottom="90px";card.style.top=""}
+  card.innerHTML=`<h3>${t(COACH[i][1])}</h3><p>${t(COACH[i][2])}</p><div class="row between"><div class="dots">${COACH.map((_,k)=>`<i class="${k===i?"on":""}"></i>`).join("")}</div><div class="row"><button class="btn sm ghost" data-act="coachSkip">${t("skip")}</button><button class="btn sm" data-act="coachNext" data-i="${i+1}">${i===COACH.length-1?t("gotIt"):t("next")}</button></div></div>`;
+  l.append(ring,card)}
+function closeCoach(){$$("#layer .coach-ring,#layer .coach-card").forEach(e=>e.remove())}
+
+/* ---------------- events ---------------- */
+document.addEventListener("click",e=>{
+  if(suppressClick){suppressClick=false;if(e.target.closest("#toolSickle"))return}
+  const a=e.target.closest("[data-act]");const act=a?.dataset.act;
+  const crop=e.target.closest(".sb-crop");if(crop){const id=crop.dataset.crop;S.sel=S.sel===id?null:id;S.tool=null;renderSidebar();refreshHint();return}
+  const tool=e.target.closest(".tool");if(tool){const k=tool.dataset.tool;S.sel=null;
+    if(k==="topo"){S.topo=!S.topo}else if(k==="sickle"){S.tool=null;showHarvestDates()}else{S.tool=S.tool===k?null:k;if(k==="water"&&!P().tiles.some(thirsty))toast(t("noWater"))}renderSidebar();refreshHint();return}
+  const tab=e.target.closest(".tab");if(tab){switchTab(tab.dataset.tab);return}
+  const pick=e.target.closest("[data-pick]");if(pick){const id=pick.dataset.pick;OB.picks.has(id)?OB.picks.delete(id):OB.picks.add(id);pick.setAttribute("aria-pressed",OB.picks.has(id));return}
+  const slot=e.target.closest(".slot");if(slot){const i=+slot.dataset.slot,x=S._spray[i];const msg=$("#sprayMsg");
+    if(x.z==="r"){msg.innerHTML=`<div class="note" style="background:var(--danger-soft)"><span>${t("locked",{why:x.why})}</span></div>`;slot.animate?.([{transform:"translateX(-4px)"},{transform:"translateX(4px)"},{transform:"none"}],{duration:200});return}
+    if(x.z==="y"&&S._pendingY!==i){S._pendingY=i;msg.innerHTML=`<div class="note"><span>${t("caution",{why:x.why})}</span></div>`;return}
+    const first=S.spray.slot===null;S.spray.slot=i;S._pendingY=null;if(x.z==="g"&&first)addRP(20);renderSpray();$("#sprayMsg").innerHTML=`<div class="note ok"><span>${t("scheduled",{d:S._days[x.d],h:String(x.h).padStart(2,"0")}).replace(" · +20 RP",x.z==="g"&&first?" · +20 RP":"").replace(" · +20 نقطة",x.z==="g"&&first?" · +20 نقطة":"")}</span></div>`;return}
+  const seg=e.target.closest(".seg button");if(seg&&!act){const p=seg.parentElement;
+    if(seg.dataset.unit){OB.unit=seg.dataset.unit;p.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b===seg));renderAreaOut();return}
+    p.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b===seg));
+    if(p.id==="segIrr")OB.irr=seg.dataset.v;if(p.id==="segPri")OB.pri=seg.dataset.v;if(p.id==="sprayTool")S.spray.tool=seg.dataset.v;
+    if(p.id==="langSeg"){LANG=seg.dataset.v;renderAll()}return}
+  switch(act){
+   case"lang":LANG=LANG==="en"?"ar":"en";renderAll();break;
+   case"startOnboard":startOnboard();break;
+   case"openSample":if(!S.plots.some(p=>p.name==="Abu Saleh vineyard"))S.plots.unshift(samplePlot());S.cur=0;enterMain(true);break;
+   case"locate":OB.lat=32.47;OB.lon=35.61;OB.area=60;$("#areaRange").value=60;OB.fitted=null;drawMap();renderAreaOut();toast(t("located"));break;
+   case"autofit":{const r=rng(Math.round(OB.lat*1e4));OB.fitted=[...Array(7)].map((_,i)=>[i/7*Math.PI*2+r()*.3,.72+r()*.25]);drawMap();renderAreaOut();break}
+   case"obBack":if(OB.step===1){show(S.plots.length?"main":"welcome");if(S.plots.length)enterMain(false)}else{OB.step--;renderOnboard()}break;
+   case"obNext":if(OB.step===1){OB.step=2;renderOnboard()}else if(OB.step===2){if(validateStep2()){OB.step=3;renderOnboard();runAnalysis()}}else if(OB.loaded)finishOnboard();break;
+   case"closeSheet":closeSheet();break;
+   case"waitRain":S.rainAsked=true;P().tiles.filter(thirsty).forEach(tl=>tl.wait=true);addRP(15);closeSheet();toast(t("waiting"));renderSidebar();break;
+   case"waterAnyway":{S.rainAsked=true;const tl=P().tiles[+a.dataset.i];closeSheet();waterTile(tl);renderSidebar();break}
+   case"week":simWeek();break;
+   case"goAlerts":switchTab("alerts");break;
+   case"goSeed":switchTab("plan");setTimeout(()=>$("#tab-plan .grade-big")?.scrollIntoView({behavior:"smooth",block:"center"}),50);break;
+   case"deploy":{const al=S.alerts.find(x=>x.id===a.dataset.a);al.done.push(+a.dataset.i);addRP(20);renderAlerts();renderHUD();break}
+   case"unlock":P().crops.push(a.dataset.id);renderPlan();renderSidebar();break;
+   case"plots":sheet(`<div class="stack"><h2 style="font-size:22px">${t("myPlots")}</h2>${S.plots.map((p,i)=>`<button class="list-item${i===S.cur?" on":""}" data-act="switchPlot" data-i="${i}"><div style="flex:1;min-width:0"><b>${p.name}</b><div class="muted" style="font-size:13px">${p.region} · ${p.area} ${t("dunum")}</div></div></button>`).join("")}<button class="btn" data-act="startOnboard">+ ${t("addPlot")}</button></div>`);break;
+   case"switchPlot":S.cur=+a.dataset.i;S.sel=null;closeSheet();renderAll();break;
+   case"tutorial":switchTab("farm");setTimeout(()=>coach(0),120);break;
+   case"coachNext":coach(+a.dataset.i);break;
+   case"coachSkip":closeCoach();S.tutorialSeen=true;break;
+  }
+});
+$("#app").addEventListener("pointerdown",e=>{const b=e.target.closest("#toolSickle");if(b)sickleDown({currentTarget:b,clientX:e.clientX,clientY:e.clientY})});
+$("#app").addEventListener("contextmenu",e=>{if(e.target.closest("#toolSickle,#farmCanvas"))e.preventDefault()});
+addEventListener("resize",()=>{if(!$("#scr-main").hidden)sizeFarm();if(!$("#scr-onboard").hidden&&OB.step===1)drawMap()});
+
+initAlerts();applyI18n();requestAnimationFrame(loop);
+})();
+</script>
