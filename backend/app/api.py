@@ -11,11 +11,11 @@ from . import services
 from .agro import geo, matching
 from .agro import soil as soilmod
 from .agro.crops import CROPS
-from .auth import current_user, hash_password, make_token, verify_password
+from .auth import current_user
 from .config import settings
 from .db import Event, Planting, Plot, Tile, User, get_db, jdump, jload
-from .schemas import (AlertAction, Evaluate, FarmInputs, Irrigate, Login, Plant, PlotCreate, PlotUpdate, Prefs,
-                      Register, SprayBook, TileAction)
+from .schemas import (AlertAction, Evaluate, FarmInputs, GridPreview, Plant, PlotCreate, PlotUpdate, Prefs,
+                      Regrid, SprayBook, TileAction)
 from .sources import geocode
 from .worker import refresh_satellite
 
@@ -67,25 +67,7 @@ async def geo_reverse(lat: float, lon: float, lang: str = "en", user: User = Dep
 
 # ------------------------------------------------------------------ auth
 def _user_out(u: User) -> dict:
-    return {"id": u.id, "email": u.email, "name": u.name, "lang": u.lang}
-
-
-@router.post("/auth/register")
-def register(body: Register, db: Session = Depends(get_db)):
-    if db.scalar(select(User).where(User.email == body.email)):
-        raise HTTPException(409, "An account with this e-mail already exists. Sign in instead.")
-    u = User(email=body.email, name=body.name.strip(), lang=body.lang, password_hash=hash_password(body.password))
-    db.add(u)
-    db.commit()
-    return {"token": make_token(u.id), "user": _user_out(u)}
-
-
-@router.post("/auth/login")
-def login(body: Login, db: Session = Depends(get_db)):
-    u = db.scalar(select(User).where(User.email == body.email.strip().lower()))
-    if not u or not verify_password(body.password, u.password_hash):
-        raise HTTPException(401, "E-mail or password is wrong.")
-    return {"token": make_token(u.id), "user": _user_out(u)}
+    return {"id": u.id, "name": u.name, "lang": u.lang}
 
 
 @router.get("/me")
@@ -113,8 +95,19 @@ async def analyze(body: FarmInputs, user: User = Depends(current_user)):
     lat, lon = geo.centroid(body.polygon)
     area = geo.polygon_area_m2(body.polygon)
     res = await services.analyze(lat, lon, body.polygon, area, body.soil, body.farm_type, body.water_m3_week,
-                                 body.priority, body.prev_crops, body.keep_crops, body.lang, body.wanted)
+                                 body.priority, body.prev_crops, body.keep_crops, body.lang, body.wanted,
+                                 body.square_w_m, body.square_h_m)
     return _public(res)
+
+
+@router.post("/grid/preview")
+def grid_preview(body: GridPreview):
+    """Squares for a drawn field (for the map preview). Needs no data sources, so it is instant."""
+    try:
+        g = geo.grid(body.polygon, body.square_w_m, body.square_h_m)
+    except geo.GridError as e:
+        raise HTTPException(422, str(e))
+    return services.grid_public(g, body.polygon, with_shapes=True)
 
 
 # ------------------------------------------------------------------ plots
@@ -164,6 +157,15 @@ def delete_plot(plot_id: int, user: User = Depends(current_user), db: Session = 
     db.delete(_plot(db, user, plot_id))
     db.commit()
     return {"ok": True}
+
+
+@router.post("/plots/{plot_id}/regrid")
+async def regrid(plot_id: int, body: Regrid, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    """Change the square size of an existing field; crops move to the new squares."""
+    p = await services.regrid(db, _plot(db, user, plot_id), body.square_w_m, body.square_h_m)
+    await refresh_satellite(p.id)
+    db.refresh(p)
+    return await services.plot_state(db, p)
 
 
 @router.post("/plots/{plot_id}/evaluate")
@@ -227,49 +229,6 @@ async def clear(plot_id: int, body: TileAction, user: User = Depends(current_use
     if not n:
         raise HTTPException(409, "Nothing is planted there.")
     return await _after(db, p, msg(f"Cleared {n} square(s)", f"تم تفريغ {n} مربع"))
-
-
-@router.post("/plots/{plot_id}/irrigate")
-async def irrigate(plot_id: int, body: Irrigate, user: User = Depends(current_user), db: Session = Depends(get_db)):
-    p = _plot(db, user, plot_id)
-    tiles = _tiles(p, body.tile_ids)
-    state = await services.plot_state(db, p)
-    by_id = {t["id"]: t for t in state["tiles"]}
-    total_m3 = 0.0
-    today = dt.date.fromisoformat(state["today"])
-    for t in tiles:
-        info = by_id[t.id]
-        if not info.get("planting"):
-            raise HTTPException(409, "Nothing is planted there yet.")
-        w = info["planting"].get("water")
-        mm = body.mm or (w["refill_mm"] if w and w["needs_water"] else None)
-        if mm is None:
-            pct = w["available_pct"] if w else "?"
-            raise HTTPException(409, f"This square does not need water today ({pct}% of soil water still available). "
-                                     "Enter an amount in mm to water anyway.")
-        m3 = mm * t.area_m2 / 1000
-        total_m3 += m3
-        db.add(Event(plot_id=p.id, tile_id=t.id, kind="irrigate", on_date=today,
-                     data=jdump({"mm": round(mm, 1), "m3": round(m3, 2)})))
-    return await _after(db, p, msg(f"Logged {total_m3:,.1f} m³ of irrigation", f"تم تسجيل {total_m3:,.1f} م³ من الري"))
-
-
-@router.post("/plots/{plot_id}/wait-rain")
-async def wait_rain(plot_id: int, body: TileAction, user: User = Depends(current_user), db: Session = Depends(get_db)):
-    p = _plot(db, user, plot_id)
-    tiles = _tiles(p, body.tile_ids)
-    state = await services.plot_state(db, p)
-    by_id = {t["id"]: t for t in state["tiles"]}
-    today = dt.date.fromisoformat(state["today"])
-    saved = 0.0
-    for t in tiles:
-        w = ((by_id[t.id].get("planting") or {}).get("water")) or {}
-        if not w.get("wait_for_rain"):
-            raise HTTPException(409, "Not enough rain is forecast in the next 48 hours to skip watering this square.")
-        saved += w.get("refill_m3", 0)
-        db.add(Event(plot_id=p.id, tile_id=t.id, kind="wait_rain", on_date=today,
-                     data=jdump({"saved_m3": w.get("refill_m3", 0), "rain48": w.get("rain_eff_next48_mm")})))
-    return await _after(db, p, msg(f"Waiting for rain saves about {saved:,.1f} m³", f"انتظار المطر يوفر حوالي {saved:,.1f} م³"))
 
 
 @router.post("/plots/{plot_id}/harvest")

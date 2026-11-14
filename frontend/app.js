@@ -7,6 +7,31 @@ const T = {
 appName:["Farm Studio","فارم ستوديو"],
 tagline:["Plan water, spraying, frost defence and harvest from NASA Earth data, played like a farm game.","خطّط للري ورش المبيدات والحماية من الصقيع والحصاد اعتمادًا على بيانات ناسا لرصد الأرض، بأسلوب لعبة مزرعة."],
 langBtn:["عربي","English"],
+startBtn:["Add my field","أضف أرضي"],noAccount:["No account needed. Your farms are saved for this phone or browser.","لا حاجة لحساب. تُحفظ مزارعك لهذا الهاتف أو المتصفح."],
+haveKey:["Have a farm key from another device?","لديك مفتاح مزرعة من جهاز آخر؟"],keyPh:["Paste your farm key","الصق مفتاح المزرعة"],open:["Open","فتح"],
+badKey:["That key is too short. Copy the whole key from More → Your farm key.","المفتاح قصير جدًا. انسخ المفتاح كاملًا من المزيد ← مفتاح مزرعتك."],
+farmKey:["Your farm key","مفتاح مزرعتك"],farmKeyHelp:["Your farms are linked to this key, not to an account. Keep a copy: paste it on another phone to see the same farms.","مزارعك مرتبطة بهذا المفتاح وليس بحساب. احتفظ بنسخة منه: الصقه في هاتف آخر لترى نفس المزارع."],
+copy:["Copy","نسخ"],copied:["Copied","تم النسخ"],useOtherKey:["Open farms from another key","فتح مزارع بمفتاح آخر"],
+squareSizeLbl:["Square size","حجم المربع"],along:["Along the field","بطول الأرض"],across:["Across","بعرضها"],auto:["Auto","تلقائي"],
+sizeHelp:["The squares turn to follow your field's edges. Change the size to match your rows, beds or greenhouses.","تدور المربعات لتتبع حواف أرضك. غيّر الحجم ليطابق خطوطك أو أحواضك أو بيوتك البلاستيكية."],
+changeSize:["Change square size","تغيير حجم المربع"],apply:["Apply","تطبيق"],resized:["Squares resized. Crops moved to the new squares.","تم تغيير حجم المربعات ونُقلت المحاصيل إليها."],
+weeklyWater:["Water you have per week","المياه المتاحة أسبوعيًا"],save:["Save","حفظ"],
+wpTitle:["Watering plan · next 7 days","خطة الري · الأيام السبعة القادمة"],
+wpEnough:["Your {a} m³ is enough. The crops need {n} m³ this week, so {s} m³ is left over.","الـ {a} م³ تكفي. تحتاج المحاصيل {n} م³ هذا الأسبوع، ويتبقى {s} م³."],
+wpShort:["Your {a} m³ covers {p}% of the {n} m³ the crops need. Every crop gets {p}% of its water; expect some stress, so water at dawn and mulch.","الـ {a} م³ تغطي {p}% من {n} م³ تحتاجها المحاصيل. كل محصول يحصل على {p}% من حاجته؛ توقّع بعض الإجهاد، فاسقِ فجرًا واستخدم التغطية."],
+wpEstimate:["The weather forecast is not available right now, so this week's plan uses NASA POWER observations and long-term averages. Check again later.","توقعات الطقس غير متاحة الآن، لذلك تعتمد خطة هذا الأسبوع على مشاهدات NASA POWER والمعدلات طويلة المدى. تحقّق لاحقًا."],
+wpNone:["Enter how much water you have each week to get a plan.","أدخل كمية المياه المتاحة كل أسبوع للحصول على خطة."],
+wpRainfed:["This is a rain-fed field: the plan shows how much water the crops use, but no watering dates.","هذه أرض بعلية: تعرض الخطة استهلاك المحاصيل للمياه دون مواعيد ري."],
+wpNoCrops:["Plant a crop to get a watering plan.","ازرع محصولًا للحصول على خطة ري."],
+wpCrop:["{n} squares · {a} m² · needs {m} m³, gets {g} m³","{n} مربعات · {a} م² · يحتاج {m} م³، يحصل على {g} م³"],
+wpNoDates:["No watering needed this week.","لا حاجة للري هذا الأسبوع."],wpDormant:["Resting for winter: no watering.","في سكون الشتاء: بدون ري."],
+wpRain:["Rain is coming, so a watering was skipped.","المطر قادم، لذا تم تخطي ريّة."],
+wpEach:["{mm} mm · {m} m³","{mm} ملم · {m} م³"],wpHow:["How this is worked out","كيف تُحسب الخطة"],
+wpHowBody:["For every square we run a daily soil-water balance (FAO-56): crop water use = crop factor × reference evaporation (Open-Meteo), minus useful rain. When the root zone dries to the crop's safe limit, the plan waters it back to full. If your weekly water is less than the total, every crop gets the same share.","لكل مربع نحسب يوميًا ميزان ماء التربة (FAO-56): استهلاك المحصول = معامل المحصول × التبخر المرجعي (Open-Meteo) ناقص المطر المفيد. عندما تجف منطقة الجذور إلى الحد الآمن، تعيدها الخطة إلى الامتلاء. إذا كانت مياهك الأسبوعية أقل من المجموع، يحصل كل محصول على نفس النسبة."],
+waterTodaySq:["Water this square today: {mm} mm ({m} m³).","اسقِ هذا المربع اليوم: {mm} ملم ({m} م³)."],
+thisWeek:["This week","هذا الأسبوع"],openPlan:["Open the watering plan","افتح خطة الري"],
+aboutTitle:["About & data","حول التطبيق والبيانات"],
+
 signIn:["Sign in","تسجيل الدخول"],createAccount:["Create account","إنشاء حساب"],yourName:["Your name","اسمك"],
 email:["E-mail","البريد الإلكتروني"],password:["Password (8+ characters)","كلمة المرور (8 أحرف أو أكثر)"],
 stepOf:["Step {n} of 3","الخطوة {n} من 3"],
@@ -32,7 +57,9 @@ errWant:["Write at least one crop you want to grow.","اكتب محصولًا و
 farmType:["Farm type","نوع الزراعة"],rainfed:["Rain-fed","بعلية"],irrigated:["Irrigated","مروية"],both:["Both","كلاهما"],
 waterAvail:["Water available (m³ per week)","المياه المتاحة (م³ أسبوعيًا)"],budget:["Budget per season (JOD)","الميزانية لكل موسم (دينار)"],
 prevCrops:["Grown here last season (optional)","زُرع هنا الموسم الماضي (اختياري)"],
-prevPh:["e.g. tomatoes","مثلًا: بندورة"],dataUsed:["Data used ({n})","البيانات المستخدمة ({n})"],
+prevPh:["e.g. tomatoes","مثلًا: بندورة"],
+noSoilHere:["The soil map (SoilGrids) has no data for this spot, which is common next to towns and roads. Please choose your soil type yourself.","خريطة التربة (SoilGrids) لا تحتوي بيانات لهذا الموقع، وهذا شائع قرب المدن والطرق. الرجاء اختيار نوع التربة بنفسك."],
+chooseSoil:["Choose soil type","اختر نوع التربة"],dataUsed:["Data used ({n})","البيانات المستخدمة ({n})"],
 wantCrops:["What do you want to grow?","ماذا تريد أن تزرع؟"],
 wantPh:["Write the crops in your own words, e.g. tomatoes, grapes and olives","اكتب المحاصيل بكلماتك، مثلًا: بندورة، عنب وزيتون"],
 priority:["What matters most","الأولوية"],priWater:["Water","المياه"],priSoil:["Soil","التربة"],priCost:["Cost","التكلفة"],
@@ -103,13 +130,13 @@ done:["Done","تم"],resolved:["Prepared","تم الاستعداد"],inDays:["in
 language:["Language","اللغة"],myPlots:["My plots","قطعي"],addPlot:["Add a plot","إضافة قطعة"],deletePlot:["Delete this plot","حذف هذه القطعة"],
 confirmDelete:["Delete “{n}” and all its history? This cannot be undone.","حذف «{n}» وكل سجله؟ لا يمكن التراجع."],yesDelete:["Delete","حذف"],
 dataSources:["Data sources","مصادر البيانات"],satLayers:["NASA satellite layers","طبقات الأقمار الصناعية"],satRefresh:["Request fresh satellite data","اطلب بيانات أقمار جديدة"],
-history:["Activity","السجل"],signOut:["Sign out","تسجيل الخروج"],replay:["Replay tutorial","إعادة الشرح"],
+history:["Activity","السجل"],replay:["Replay tutorial","إعادة الشرح"],
 fieldInfo:["Field","الأرض"],
 about:["Numbers come from live NASA and weather services for your field. Recommendations follow FAO-56 and should be checked with your agricultural extension officer.","الأرقام من خدمات ناسا والطقس الحية لأرضك. التوصيات مبنية على FAO-56 ويُفضّل مراجعتها مع المرشد الزراعي."],
 satStatus:{done:["Up to date","محدّثة"],submitted:["Requested from NASA","طُلبت من ناسا"],queued:["Queued at NASA","في الانتظار لدى ناسا"],pending:["Queued at NASA","في الانتظار لدى ناسا"],processing:["NASA is processing","ناسا تعالج الطلب"],error:["Error","خطأ"],not_configured:["Server has no Earthdata login","لا يوجد حساب Earthdata على الخادم"],not_started:["Not requested yet","لم تُطلب بعد"],deleted:["Expired, re-requesting","انتهت، يُعاد الطلب"]},
 evKind:{plant:["Planted","زراعة"],irrigate:["Watered","ري"],wait_rain:["Waited for rain","انتظار المطر"],harvest:["Harvested","حصاد"],spray:["Spray booked","حجز رش"],alert_action:["Risk step done","خطوة استعداد"],clear:["Removed","إزالة"]},
 c1t:["Your crops","محاصيلك"],c1b:["Tap a crop. The best squares for it light up green, from soil, terrain and climate.","اضغط على محصول. تضيء أفضل المربعات له بالأخضر، حسب التربة والتضاريس والمناخ."],
-c2t:["Your field","أرضك"],c2b:["This is the real shape of your field, split into squares (size shown at the top). A drop means a square needs water today. Pinch or scroll to zoom, drag to move.","هذا هو الشكل الحقيقي لأرضك مقسّمًا إلى مربعات (الحجم في الأعلى). القطرة تعني أن المربع يحتاج ري اليوم. قرّب بإصبعين أو بالعجلة، واسحب للتحريك."],
+c2t:["Your field","أرضك"],c2b:["This is the real shape of your field, split into squares (size at the top). A drop means today is a watering day in your weekly plan. Pinch or scroll to zoom, drag to move.","هذا هو الشكل الحقيقي لأرضك مقسّمًا إلى مربعات (الحجم في الأعلى). القطرة تعني أن اليوم يوم ري في خطتك الأسبوعية. قرّب بإصبعين أو بالعجلة، واسحب للتحريك."],
 c3t:["The sickle","المنجل"],c3b:["Drag it over golden squares: every square it touches is harvested. Tap it to see harvest dates.","اسحبه فوق المربعات الذهبية: كل مربع يلمسه يُحصد. اضغطه لرؤية مواعيد الحصاد."],
 c4t:["Risks","المخاطر"],c4b:["Frost, heavy rain, heat and wind warnings, with what to do in the field.","تحذيرات الصقيع والأمطار والحر والرياح، مع ما يجب فعله في الحقل."],
 skip:["Skip","تخطي"],gotIt:["Start farming","ابدأ الزراعة"],
@@ -136,14 +163,15 @@ function applyI18n() {
 }
 
 /* ================= API ================= */
-let TOKEN = store.get("fs_token");
+function newKey() { const b = new Uint8Array(24); crypto.getRandomValues(b); return btoa(String.fromCharCode(...b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
+let FARM_KEY = store.get("fs_key");
+if (!FARM_KEY) { FARM_KEY = newKey(); store.set("fs_key", FARM_KEY); }
 class ApiError extends Error { constructor(msg, status) { super(msg); this.status = status; } }
 async function api(path, { method = "GET", body } = {}) {
   let r;
-  try { r = await fetch("/api" + path, { method, headers: { "Content-Type": "application/json", ...(TOKEN ? { Authorization: "Bearer " + TOKEN } : {}) }, body: body ? JSON.stringify(body) : undefined }); }
+  try { r = await fetch("/api" + path, { method, headers: { "Content-Type": "application/json", "X-Farm-Key": FARM_KEY }, body: body ? JSON.stringify(body) : undefined }); }
   catch { throw new ApiError(t("netErr"), 0); }
   let data = null; try { data = await r.json(); } catch {}
-  if (r.status === 401 && path !== "/auth/login") { signOut(); throw new ApiError(data?.detail || "Signed out", 401); }
   if (!r.ok) { let d = data?.detail; if (Array.isArray(d)) d = d.map(x => (x.loc ? x.loc.slice(-1)[0] + ": " : "") + x.msg).join("; "); throw new ApiError(d || ("HTTP " + r.status), r.status); }
   return data;
 }
@@ -245,12 +273,14 @@ const TILE = 64; // world units per square (diamond width)
 const cam = { s: 1, x: 0, y: 0, fitted: false };
 let W = 0, H = 0, DPR = 1;
 const fx = [];
-const isoX = (gx, gy) => (gx - gy) * TILE / 2, isoY = (gx, gy) => (gx + gy) * TILE / 4;
-function screenToGrid(sx, sy) { const wx = (sx - cam.x) / cam.s, wy = (sy - cam.y) / cam.s; const X = wx / TILE, Y = wy / TILE; return [2 * Y + X, 2 * Y - X]; }
+let AX = 1, AY = 1; // square proportions: along / across the field
+function setAspect() { const gr = P()?.plot.grid; const k = gr && gr.square_w_m && gr.square_h_m ? Math.sqrt(gr.square_w_m / gr.square_h_m) : 1; AX = Math.max(.4, Math.min(2.5, k)); AY = 1 / AX; }
+const isoX = (gx, gy) => (gx * AX - gy * AY) * TILE / 2, isoY = (gx, gy) => (gx * AX + gy * AY) * TILE / 4;
+function screenToGrid(sx, sy) { const wx = (sx - cam.x) / cam.s, wy = (sy - cam.y) / cam.s; const X = wx / TILE, Y = wy / TILE; return [(2 * Y + X) / AX, (2 * Y - X) / AY]; }
 function sizeFarm() { const r = cv.getBoundingClientRect(); DPR = devicePixelRatio || 1; W = r.width; H = r.height; if (!W || !H) return; cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); if (!cam.fitted) fitCam(); }
 function grid() { return P()?.plot.grid || { cols: 6, rows: 6, outline: [[0, 0], [6, 0], [6, 6], [0, 6]], square_w_m: 0, square_h_m: 0 }; }
 function fitCam() {
-  const st = P(); if (!st || !W) return; const gr = grid();
+  const st = P(); if (!st || !W) return; setAspect(); const gr = grid();
   const pts = gr.outline.concat([[0, 0], [gr.cols, 0], [gr.cols, gr.rows], [0, gr.rows]]);
   const xs = pts.map(p => isoX(p[0], p[1])), ys = pts.map(p => isoY(p[0], p[1]));
   const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys) - 40, maxY = Math.max(...ys) + 20;
@@ -264,8 +294,8 @@ function zoomAt(f, sx, sy) { const ns = Math.max(.15, Math.min(4, cam.s * f)); c
 function pickTile(sx, sy) { const st = P(); if (!st) return null; const [gx, gy] = screenToGrid(sx, sy); const c = Math.floor(gx), r = Math.floor(gy); return st.tiles.find(x => x.c === c && x.r === r) || null; }
 const stageOf = tl => tl.planting ? tl.planting.stage : -1;
 const ready = tl => !!(tl.planting && tl.planting.ready);
-const thirsty = tl => !!(tl.planting?.water?.needs_water && !tl.planting.water.waiting_for_rain);
-const waiting = tl => !!tl.planting?.water?.waiting_for_rain;
+const thirsty = tl => !!tl.planting?.water?.water_today;
+const waiting = tl => !!(tl.planting?.water?.rain_postponed && !tl.planting.water.water_today);
 function rnd(seed) { let s = seed % 2147483647; if (s <= 0) s += 2147483646; return () => (s = s * 16807 % 2147483647) / 2147483647; }
 function inOutline(gx, gy, poly) { let ins = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const [xi, yi] = poly[i], [xj, yj] = poly[j]; if ((yi > gy) !== (yj > gy) && gx < (xj - xi) * (gy - yi) / ((yj - yi) || 1e-9) + xi) ins = !ins; } return ins; }
 
@@ -283,6 +313,14 @@ function buildDecor() {
   decor = out;
 }
 function polyPath(pts) { g.beginPath(); pts.forEach((p, i) => { const x = isoX(p[0], p[1]), y = isoY(p[0], p[1]); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.closePath(); }
+function bedPath(tl, dy) { // rounded bed inside a square, following its real proportions
+  const e = .06, pts = [[tl.c + e, tl.r + e], [tl.c + 1 - e, tl.r + e], [tl.c + 1 - e, tl.r + 1 - e], [tl.c + e, tl.r + 1 - e]].map(p => [isoX(p[0], p[1]), isoY(p[0], p[1]) + dy]);
+  const r = .2; g.beginPath();
+  for (let i = 0; i < 4; i++) { const a = pts[i], b = pts[(i + 1) % 4], c = pts[(i + 2) % 4];
+    const m1 = [a[0] + (b[0] - a[0]) * (1 - r), a[1] + (b[1] - a[1]) * (1 - r)], m2 = [b[0] + (c[0] - b[0]) * r, b[1] + (c[1] - b[1]) * r];
+    i ? g.lineTo(m1[0], m1[1]) : g.moveTo(m1[0], m1[1]); g.quadraticCurveTo(b[0], b[1], m2[0], m2[1]); }
+  g.closePath();
+}
 function roundDiamond(cx, cy, w, h, r) {
   const pts = [[cx, cy - h / 2], [cx + w / 2, cy], [cx, cy + h / 2], [cx - w / 2, cy]];
   g.beginPath();
@@ -333,7 +371,7 @@ function plantSpots(tl) {
   return { pts: [[.27, .27], [.73, .27], [.5, .5], [.27, .73], [.73, .73]], sc: .68 };
 }
 function drawFarm(now) {
-  const st = P(); if (!st || !W) return; buildDecor();
+  const st = P(); if (!st || !W) return; setAspect(); buildDecor();
   const gr = grid(), poly = gr.outline;
   g.setTransform(DPR, 0, 0, DPR, 0, 0);
   const bg = g.createRadialGradient(W * .45, H * .45, 20, W * .45, H * .5, Math.max(W, H));
@@ -353,19 +391,19 @@ function drawFarm(now) {
     const cx = isoX(tl.c + .5, tl.r + .5), cy = isoY(tl.c + .5, tl.r + .5);
     const w = tl.planting?.water, wet = w ? Math.max(0, Math.min(1, w.available_pct / 100)) : .45;
     const base = shade(soil, .08 - .38 * wet);
-    roundDiamond(cx, cy + 3, TILE * .9, TILE * .45, .22); g.fillStyle = shade(base, -.35); g.fill();
-    roundDiamond(cx, cy, TILE * .9, TILE * .45, .22);
+    bedPath(tl, 3); g.fillStyle = shade(base, -.35); g.fill();
+    bedPath(tl, 0);
     const bgr = g.createLinearGradient(cx, cy - TILE * .22, cx, cy + TILE * .22); bgr.addColorStop(0, shade(base, .18)); bgr.addColorStop(1, shade(base, -.08));
     g.fillStyle = bgr; g.fill();
-    g.save(); roundDiamond(cx, cy, TILE * .9, TILE * .45, .22); g.clip(); g.strokeStyle = shade(base, .28); g.lineWidth = 1.6;
-    for (let i = -2; i <= 2; i++) { g.beginPath(); g.moveTo(cx - TILE * .4 + i * 9, cy - TILE * .2 + i * 4.5 + 6); g.lineTo(cx + i * 9 + TILE * .05, cy + i * 4.5 + TILE * .2 + 6 - TILE * .2); g.stroke(); }
+    g.save(); bedPath(tl, 0); g.clip(); g.strokeStyle = shade(base, .28); g.lineWidth = 1.6;
+    for (let i = 1; i <= 4; i++) { const f = i / 5; g.beginPath(); g.moveTo(isoX(tl.c + f, tl.r + .08), isoY(tl.c + f, tl.r + .08)); g.lineTo(isoX(tl.c + f, tl.r + .92), isoY(tl.c + f, tl.r + .92)); g.stroke(); }
     g.restore();
     let overlay = null;
     if (S.topo && tl.low) overlay = "rgba(47,127,181,.5)";
     if (S.sel && !tl.planting) { const s = tl.suitability?.[S.sel] ?? 0; if (s >= 75) overlay = `rgba(90,210,80,${.45 + .15 * Math.sin(now / 250)})`; else if (s >= 55) overlay = "rgba(240,200,60,.45)"; }
-    if (overlay) { roundDiamond(cx, cy, TILE * .9, TILE * .45, .22); g.fillStyle = overlay; g.fill(); }
-    if (ready(tl) && !overlay) { roundDiamond(cx, cy, TILE * .9, TILE * .45, .22); g.fillStyle = `rgba(250,200,70,${.22 + .1 * Math.sin(now / 300)})`; g.fill(); }
-    if (sickle.active && sickle.hover === tl.id) { roundDiamond(cx, cy, TILE * .9, TILE * .45, .22); g.strokeStyle = "#fff"; g.lineWidth = 3; g.stroke(); }
+    if (overlay) { bedPath(tl, 0); g.fillStyle = overlay; g.fill(); }
+    if (ready(tl) && !overlay) { bedPath(tl, 0); g.fillStyle = `rgba(250,200,70,${.22 + .1 * Math.sin(now / 300)})`; g.fill(); }
+    if (sickle.active && sickle.hover === tl.id) { bedPath(tl, 0); g.strokeStyle = "#fff"; g.lineWidth = 3; g.stroke(); }
   });
   g.restore();
   const items = fenceItems(poly);
@@ -436,25 +474,18 @@ function whyList(reasons) { return reasons?.length ? `<ul class="why">${reasons.
 /* ================= screens ================= */
 function show(id) { ["auth", "onboard", "main"].forEach(k => $("#scr-" + k).hidden = k !== id); }
 
-/* ---- auth ---- */
-let authMode = "login";
-function renderAuth() { $("#nameField").hidden = authMode !== "register"; $("#authBtn").textContent = authMode === "login" ? t("signIn") : t("createAccount"); $("#aPass").autocomplete = authMode === "login" ? "current-password" : "new-password"; $$("#authMode button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === authMode)); }
-$("#authForm").addEventListener("submit", async e => {
-  e.preventDefault(); const err = $("#authErr"); err.hidden = true; const btn = $("#authBtn"); btn.disabled = true;
-  try {
-    const body = { email: $("#aEmail").value.trim(), password: $("#aPass").value };
-    const res = authMode === "login" ? await api("/auth/login", { method: "POST", body }) : await api("/auth/register", { method: "POST", body: { ...body, name: $("#aName").value.trim(), lang: LANG } });
-    TOKEN = res.token; store.set("fs_token", TOKEN); S.user = res.user; if (res.user.lang && res.user.lang !== LANG && !store.get("fs_lang")) { LANG = res.user.lang; applyI18n(); }
-    await afterLogin();
-  } catch (ex) { err.textContent = ex.message; err.hidden = false; } finally { btn.disabled = false; }
-});
-function signOut() { TOKEN = null; store.set("fs_token", null); S.user = null; S.plots = []; S.state = null; closeSheet(); show("auth"); renderAuth(); }
-async function afterLogin() {
+/* ---- start ---- */
+async function afterStart() {
   S.plots = await api("/plots");
-  if (!S.plots.length) { startOnboard(); return; }
+  if (!S.plots.length) { show("auth"); return; }
   const last = +store.get("fs_plot"); S.plotId = S.plots.some(p => p.id === last) ? last : S.plots[0].id;
   await enterMain();
 }
+function useKey(k) {
+  k = (k || "").trim(); if (k.length < 24) { toast(t("badKey")); return; }
+  FARM_KEY = k; store.set("fs_key", k); store.set("fs_plot", null); location.reload();
+}
+$("#keyForm").addEventListener("submit", e => { e.preventDefault(); useKey($("#keyIn").value); });
 
 /* ---- onboarding: map ---- */
 const REGIONS = [
@@ -464,21 +495,10 @@ const REGIONS = [
   ["Azraq", "الأزرق", 31.88, 36.83, 12], ["Karak", "الكرك", 31.18, 35.70, 12], ["Tafilah", "الطفيلة", 30.84, 35.60, 12], ["Shoubak", "الشوبك", 30.53, 35.56, 12],
   ["Ma'an", "معان", 30.19, 35.73, 11], ["Disi", "الديسي", 29.80, 35.33, 11], ["Aqaba", "العقبة", 29.53, 35.01, 12],
 ];
-const OB = { step: 1, corners: [], irr: "irr", pri: "water", prev: new Set(), picks: new Set(), analysis: null, loading: false };
+const OB = { step: 1, corners: [], irr: "irr", pri: "water", prev: new Set(), picks: new Set(), analysis: null, loading: false, sq: null, preview: null, previewErr: null };
 let map = null, mapLayer = null, gridLayer = null;
 function areaM2(poly) { if (poly.length < 3) return 0; const lat0 = poly.reduce((s, p) => s + p[0], 0) / poly.length; const k = 111320 * Math.cos(lat0 * Math.PI / 180); let s = 0; for (let i = 0; i < poly.length; i++) { const a = poly[i], b = poly[(i + 1) % poly.length]; s += (a[1] * k) * (b[0] * 110540) - (b[1] * k) * (a[0] * 110540); } return Math.abs(s) / 2; }
 function metres(a, b) { const lat0 = (a[0] + b[0]) / 2, k = 111320 * Math.cos(lat0 * Math.PI / 180); return Math.hypot((a[1] - b[1]) * k, (a[0] - b[0]) * 110540); }
-function gridPreview(poly) { // mirrors backend geo.grid_size / geo.grid
-  const lats = poly.map(p => p[0]), lons = poly.map(p => p[1]), s = Math.min(...lats), n = Math.max(...lats), w = Math.min(...lons), e = Math.max(...lons);
-  const lat0 = (s + n) / 2, kx = 111320 * Math.cos(lat0 * Math.PI / 180), width = Math.max(1, (e - w) * kx), height = Math.max(1, (n - s) * 110540);
-  let side = Math.sqrt(Math.max(1, areaM2(poly)) / 40); side = Math.max(side, width / 12, height / 12);
-  const cols = Math.max(1, Math.min(12, Math.round(width / side))), rows = Math.max(1, Math.min(12, Math.round(height / side)));
-  const inside = (la, lo) => { let ins = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const [yi, xi] = poly[i], [yj, xj] = poly[j]; if ((yi > la) !== (yj > la) && lo < (xj - xi) * (la - yi) / ((yj - yi) || 1e-12) + xi) ins = !ins; } return ins; };
-  const cells = [];
-  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) { let hit = 0; for (let a = 0; a < 4; a++) for (let b = 0; b < 4; b++) if (inside(n - (r + (a + .5) / 4) * (n - s) / rows, w + (c + (b + .5) / 4) * (e - w) / cols)) hit++;
-    if (hit >= 4) cells.push([[n - r * (n - s) / rows, w + c * (e - w) / cols], [n - (r + 1) * (n - s) / rows, w + (c + 1) * (e - w) / cols]]); }
-  return { cols, rows, cw: width / cols, ch: height / rows, cells };
-}
 function initMap() {
   if (map || !window.L) return;
   map = window.L.map("leafletMap", { zoomControl: true, maxBounds: [[28.8, 34.6], [33.6, 39.6]], maxBoundsViscosity: .6, minZoom: 7 }).setView([31.3, 36.3], 7);
@@ -499,13 +519,34 @@ function drawCorners() {
   const a = areaM2(C), info = $("#squareInfo");
   $("#areaOut").textContent = C.length >= 3 ? `${fmtNum(a / 1000, 1)} ${t("dunums")} · ${fmtNum(a / 10000, 2)} ${t("hectare")}` : "–";
   $("#cornerHint").textContent = C.length >= 3 ? t("cornersOk", { n: C.length }) : t("cornersN", { n: C.length });
-  if (C.length >= 3 && a >= 100) {
-    const gp = gridPreview(C);
-    gp.cells.forEach(b => L.rectangle(b, { color: "#fff", weight: 1, opacity: .7, fillOpacity: 0, interactive: false }).addTo(gridLayer));
-    info.hidden = false; info.innerHTML = `<span>${t("squaresInfo", { n: gp.cells.length, w: fmtNum(gp.cw), h: fmtNum(gp.ch), a: fmtNum(gp.cw * gp.ch) })}</span>`;
-  } else info.hidden = true;
+  $("#sizeBox").hidden = !(C.length >= 3 && a >= 100);
+  if (C.length >= 3 && a >= 100) schedulePreview(); else { info.hidden = true; OB.preview = null; }
   updateObNext();
 }
+let previewT = null, previewSeq = 0;
+function schedulePreview() { clearTimeout(previewT); previewT = setTimeout(runPreview, 250); }
+async function runPreview() {
+  const C = OB.corners, info = $("#squareInfo"), seq = ++previewSeq; if (C.length < 3) return;
+  try {
+    const g2 = await api("/grid/preview", { method: "POST", body: { polygon: C, square_w_m: OB.sq?.w ?? null, square_h_m: OB.sq?.h ?? null } });
+    if (seq !== previewSeq) return;
+    OB.preview = g2; OB.previewErr = null; gridLayer.clearLayers();
+    g2.shapes.forEach(sh => window.L.polygon(sh, { color: "#fff", weight: 1, opacity: .75, fillOpacity: 0, interactive: false }).addTo(gridLayer));
+    if (!OB.sq) { $("#sqW").value = g2.square_w_m; $("#sqH").value = g2.square_h_m; }
+    info.className = "note info"; info.hidden = false;
+    info.innerHTML = `<span>${t("squaresInfo", { n: g2.squares, w: fmtNum(g2.square_w_m), h: fmtNum(g2.square_h_m), a: fmtNum(g2.square_area_m2) })}</span>`;
+  } catch (e) {
+    if (seq !== previewSeq) return;
+    OB.preview = null; OB.previewErr = e.message; gridLayer.clearLayers();
+    info.className = "note err"; info.hidden = false; info.innerHTML = `<span>${esc(e.message)}</span>`;
+  }
+  updateObNext();
+}
+function readSize(wSel, hSel) {
+  const w = +$(wSel).value, h = +$(hSel).value || w;
+  return w >= 3 ? { w, h: h >= 3 ? h : w } : null;
+}
+["#sqW", "#sqH"].forEach(sel => $(sel).addEventListener("input", () => { OB.sq = readSize("#sqW", "#sqH"); if (OB.sq) schedulePreview(); }));
 let placeResults = [];
 async function searchPlace(q) {
   const box = $("#placeResults"); q = q.trim(); if (!q) return;
@@ -522,7 +563,8 @@ const regionChips = () => REGIONS.map((r, i) => `<button type="button" class="ch
 
 /* ---- onboarding: steps ---- */
 function startOnboard() {
-  Object.assign(OB, { step: 1, corners: [], analysis: null, loading: false }); OB.picks.clear(); OB.prev.clear();
+  Object.assign(OB, { step: 1, corners: [], analysis: null, loading: false, sq: null, preview: null, previewErr: null }); OB.picks.clear(); OB.prev.clear();
+  $("#sqW").value = ""; $("#sqH").value = "";
   ["#fName", "#fWater", "#fBudget", "#fWant", "#fPrev"].forEach(s => $(s).value = ""); $("#fSoil").value = ""; $("#wantPreview").innerHTML = ""; $("#prevPreview").innerHTML = "";
   $$("#ob2 .field.bad").forEach(f => { f.classList.remove("bad"); f.querySelector(".err").hidden = true; });
   show("onboard"); closeSheet(); renderOnboard(); $("#regionChips").innerHTML = regionChips();
@@ -530,7 +572,7 @@ function startOnboard() {
 }
 function updateObNext() {
   const b = $("#obNextBtn"); b.textContent = OB.step === 1 ? t("next") : OB.step === 2 ? t("analyze") : t("createPlot");
-  b.disabled = OB.loading || (OB.step === 1 && (OB.corners.length < 3 || areaM2(OB.corners) < 100)) || (OB.step === 3 && !OB.analysis);
+  b.disabled = OB.loading || (OB.step === 1 && (OB.corners.length < 3 || areaM2(OB.corners) < 100 || !!OB.previewErr)) || (OB.step === 3 && !OB.analysis);
 }
 function renderOnboard() {
   if (OB.shownStep !== OB.step) { OB.shownStep = OB.step; $("#ob" + OB.step).scrollTop = 0; }
@@ -563,11 +605,16 @@ function validateStep2() {
   if (!ok) $("#ob2 .field.bad")?.scrollIntoView({ behavior: "smooth", block: "center" });
   return ok;
 }
-function farmInputs() { return { polygon: OB.corners, soil: $("#fSoil").value, farm_type: OB.irr, water_m3_week: +$("#fWater").value || 0, priority: OB.pri, prev_crops: [...OB.prev], keep_crops: [], wanted: $("#fWant").value.trim(), lang: LANG }; }
+function farmInputs() { return { polygon: OB.corners, soil: $("#fSoil").value, farm_type: OB.irr, water_m3_week: +$("#fWater").value || 0, priority: OB.pri, prev_crops: [...OB.prev], keep_crops: [], wanted: $("#fWant").value.trim(), square_w_m: OB.sq?.w ?? null, square_h_m: OB.sq?.h ?? null, lang: LANG }; }
 async function runAnalysis() {
   OB.loading = true; OB.analysis = null; renderOnboard();
   try { OB.analysis = await api("/analyze", { method: "POST", body: farmInputs() }); OB.picks.clear(); OB.analysis.wanted.forEach(x => { if (x.crop && x.verdict !== "poor") OB.picks.add(x.crop); }); $("#ob3Err").hidden = true; }
-  catch (e) { $("#ob3Err").innerHTML = `${esc(e.message)} <button class="btn sm ghost" data-act="retryAnalyze" style="margin-top:8px">${t("retry")}</button>`; $("#ob3Err").hidden = false; }
+  catch (e) {
+    const soilErr = e.status === 422 || /soil/i.test(e.message);
+    $("#ob3Err").innerHTML = soilErr
+      ? `${esc(e.status === 422 && /not answering/.test(e.message) ? (LANG === "ar" ? "خدمة خريطة التربة (SoilGrids) لا تستجيب الآن. الرجاء اختيار نوع التربة بنفسك." : e.message) : t("noSoilHere"))} <button class="btn sm" data-act="pickSoil" style="margin-top:8px">${t("chooseSoil")}</button>`
+      : `${esc(e.message)} <button class="btn sm ghost" data-act="retryAnalyze" style="margin-top:8px">${t("retry")}</button>`;
+    $("#ob3Err").hidden = false; }
   OB.loading = false; renderOnboard();
 }
 function evalCard(x, checkable) {
@@ -620,7 +667,8 @@ async function createPlot() {
 /* ---- main ---- */
 async function loadPlot(refit) {
   busy(true);
-  try { const st = await api("/plots/" + S.plotId); S.state = st; if (refit) cam.fitted = false; renderHUD(); renderSidebar(); refreshHint(); sizeFarm(); }
+  try { const st = await api("/plots/" + S.plotId); S.state = st; if (refit) cam.fitted = false; renderHUD(); renderSidebar(); refreshHint(); sizeFarm();
+    if (S.tab === "more") renderMore(); }
   finally { busy(false); }
 }
 async function enterMain(tutorial) {
@@ -682,7 +730,6 @@ const tileLabel = tl => t("squareN", { c: "ABCDEFGHIJKL"[tl.c] || tl.c + 1, r: t
 function onTileTap(tl) {
   if (!tl.inside) { toast(t("outside")); return; }
   if (S.sel && !tl.planting) { plantSheet(tl, S.sel); return; }
-  if (thirsty(tl)) { waterSheet(tl); return; }
   infoSheet(tl);
 }
 function plantSheet(tl, crop) {
@@ -694,19 +741,35 @@ function plantSheet(tl, crop) {
   $("#plantForm").onsubmit = async e => { e.preventDefault(); const date = $("#plantDate").value || today; closeSheet();
     await guard(async () => { applyState(await api(`/plots/${S.plotId}/plant`, { method: "POST", body: { tile_ids: [tl.id], crop, planted_on: date } })); floatAt(tl.id, "🌱", "#fff", "#7CC473"); }); };
 }
-function waterSheet(tl) {
-  const w = tl.planting?.water; if (!w) { infoSheet(tl); return; }
-  if (w.wait_for_rain) {
-    sheet(`<div class="stack"><h2 style="font-size:24px">${t("holdOff")}</h2><p style="margin:0">${t("holdOffBody", { mm: fmtNum(w.rain_eff_next48_mm, 1), m: fmtNum(w.refill_m3, 1) })}</p><span class="tag">Open-Meteo · FAO-56</span>
-      <button class="btn water block" data-act="waitRain" data-id="${tl.id}">${t("waitRain")}</button><button class="btn ghost block" data-act="waterNow" data-id="${tl.id}" data-mm="${w.refill_mm}">${t("waterAnyway")}</button></div>`); return; }
-  const mm = w.needs_water ? w.refill_mm : 10;
-  sheet(`<form class="stack" id="waterForm"><h2 style="font-size:22px">${t("waterTitle")} · ${tileLabel(tl)}</h2>
-    <p style="margin:0">${t("waterBody", { p: w.available_pct, mm: fmtNum(mm, 1), m: fmtNum(mm * tl.area_m2 / 1000, 1) })}</p>
-    <div class="field"><label class="label" for="waterMm">${t("mmLabel")}</label><input id="waterMm" type="number" min="1" max="200" step="0.5" value="${mm}"></div>
-    <button class="btn water block" type="submit">${t("waterDone")}</button><button class="btn ghost block" type="button" data-act="closeSheet">${t("cancel")}</button></form>`);
-  $("#waterForm").onsubmit = e => { e.preventDefault(); irrigate(tl.id, +$("#waterMm").value); };
+function weekDay(d) { return new Date(d + "T12:00:00").toLocaleDateString(loc(), { weekday: "short", day: "numeric" }); }
+function waterPlanHTML(wp, compact) {
+  const st = { enough: t("wpEnough", { a: fmtNum(wp.available_m3), n: fmtNum(wp.need_m3), s: fmtNum(wp.spare_m3) }),
+    short: t("wpShort", { a: fmtNum(wp.available_m3), p: wp.share_pct, n: fmtNum(wp.need_m3) }), no_water: t("wpNone"),
+    rainfed: t("wpRainfed"), no_crops: t("wpNoCrops") }[wp.status];
+  const cls = wp.status === "enough" ? "ok" : wp.status === "short" || wp.status === "no_water" ? "" : "info";
+  const today = P().today;
+  return `<div class="wplan">${wp.estimate ? `<div class="note"><span>${t("wpEstimate")}</span></div>` : ""}<div class="note ${cls}"><span>${esc(st)}</span></div>
+    ${wp.crops.map(c => `<div class="wcrop"><canvas data-icon="${c.crop}"></canvas><div style="min-width:0"><b>${esc(cName(c.crop))}</b>
+      <div class="muted" style="font-size:12.5px">${t("wpCrop", { n: c.squares, a: fmtNum(c.area_m2), m: fmtNum(c.need_m3), g: fmtNum(c.give_m3) })}</div>
+      ${c.dormant ? `<div class="muted" style="font-size:13px;margin-top:4px">${t("wpDormant")}</div>` : c.dates.length ? `<div class="wdates">${c.dates.map(d => `<span class="wdate${d.date === today ? " today" : ""}">${esc(weekDay(d.date))} · ${t("wpEach", { mm: fmtNum(d.mm), m: fmtNum(d.m3, 1) })}</span>`).join("")}</div>` : `<div class="muted" style="font-size:13px;margin-top:4px">${t("wpNoDates")}</div>`}
+      ${c.rain_postponed ? `<div style="font-size:12.5px;margin-top:4px;color:var(--water)">☁ ${t("wpRain")}</div>` : ""}</div></div>`).join("")}
+    ${compact ? "" : `<details><summary class="muted" style="font-size:13px;cursor:pointer">${t("wpHow")}</summary><p class="muted" style="font-size:13px">${t("wpHowBody")}</p></details>`}</div>`;
 }
-async function irrigate(id, mm) { closeSheet(); await guard(async () => { applyState(await api(`/plots/${S.plotId}/irrigate`, { method: "POST", body: { tile_ids: [id], mm } })); floatAt(id, "💧", "#fff", "#6AB4E6"); }); }
+function waterPlanSheet() {
+  const wp = P().water_plan;
+  sheet(`<div class="stack"><h2 style="font-size:22px">${t("wpTitle")}</h2>${weeklyInput()}${waterPlanHTML(wp, true)}
+    <button class="btn ghost block" data-act="goPlan">${t("openPlan")}</button><button class="btn ghost block" data-act="closeSheet">${t("close")}</button></div>`);
+  bindWeekly();
+}
+function weeklyInput() {
+  return `<form class="map-search" id="weeklyForm"><label style="flex:1;display:flex;flex-direction:column;gap:4px;font-size:12px" class="muted">${t("weeklyWater")}<input id="weeklyIn" type="number" min="0" step="1" inputmode="decimal" value="${P().plot.water_m3_week || ""}"></label><span class="muted" style="align-self:end;padding-bottom:10px">m³</span><button class="btn sm" type="submit" style="align-self:end">${t("save")}</button></form>`;
+}
+function bindWeekly() {
+  const f = $("#weeklyForm"); if (!f) return;
+  f.onsubmit = async e => { e.preventDefault(); const v = Math.max(0, +$("#weeklyIn").value || 0);
+    await guard(async () => { await api(`/plots/${S.plotId}`, { method: "PATCH", body: { water_m3_week: v } }); await loadPlot(); toast(t("save") + " ✓");
+      if ($("#layer .sheet")) waterPlanSheet(); if (S.tab === "plan") loadTab("plan"); }); };
+}
 function infoSheet(tl) {
   const p = tl.planting, gr = grid(), kv = (k, v) => `<span>${k}</span><b>${v}</b>`;
   const terrain = kv(t("squareDims"), `${fmtNum(gr.square_w_m)} × ${fmtNum(gr.square_h_m)} m`) + kv(t("squareArea"), `${fmtNum(tl.area_m2)} m²`)
@@ -720,9 +783,10 @@ function infoSheet(tl) {
   const w = p.water;
   sheet(`<div class="stack"><div class="row"><canvas data-icon="${p.crop}" data-st="${p.stage}" style="width:56px;height:56px"></canvas><div><h2 style="font-size:22px">${esc(cName(p.crop))}</h2><span class="muted">${tileLabel(tl)} · ${fmtDate(p.planted_on)}</span></div></div>
     <div class="kv">${kv(t("stage"), p.ready ? t("readyNow") : p.harvested_this_season ? t("harvestedSeason") : `${p.stage + 1}/4`)}${kv(t("harvestDates"), p.harvest_from ? `${fmtDate(p.harvest_from)} – ${fmtDate(p.harvest_to)}` : "–")}
-    ${w ? kv(t("soilWater"), w.dormant ? t("dormant") : `${w.available_pct}% · ${fmtNum(w.depletion_mm)} / ${fmtNum(w.taw_mm)} mm`) + kv(t("nextWater"), w.dormant ? "–" : w.needs_water ? t("now") + ` · ${fmtNum(w.refill_mm)} mm` : (w.next_need_date ? fmtDate(w.next_need_date) : "> 9 d")) : ""}
+    ${w ? kv(t("soilWater"), w.dormant ? t("dormant") : `${w.available_pct}%`) + kv(t("nextWater"), w.dormant ? "–" : w.events.length ? `${esc(weekDay(w.events[0].date))} · ${fmtNum(w.events[0].mm)} mm (${fmtNum(w.events[0].m3, 1)} m³)` : t("wpNoDates")) + kv(t("thisWeek"), `${fmtNum(w.events.reduce((s2, e) => s2 + e.m3, 0), 1)} m³`) : ""}
     ${terrain}</div><span class="tag">${esc(p.method)} · FAO-56</span>
-    ${w && !w.dormant ? `<button class="btn water block" data-act="openWater" data-id="${tl.id}">${t("waterTitle")}</button>` : ""}
+    ${w && w.water_today ? `<div class="note info"><span>${t("waterTodaySq", { mm: fmtNum(w.today_mm), m: fmtNum(w.events[0].m3, 1) })}</span></div>` : ""}
+    ${w ? `<button class="btn water block" data-act="waterPlan">${t("openPlan")}</button>` : ""}
     <button class="btn ghost block" data-act="clearSquare" data-id="${tl.id}">${t("clearSquare")}</button>
     <button class="btn ghost block" data-act="closeSheet">${t("close")}</button></div>`);
 }
@@ -810,7 +874,6 @@ function showHarvestDates() {
 function bars(series, key, cls, max) { if (!series?.length) return ""; const m = max != null ? max : (Math.max(...series.map(x => x[key])) || 1); return `<div class="spark ${cls || ""}">${series.map(x => `<i title="${esc((x.year || x.date) + ": " + x[key])}" style="height:${Math.max(3, 100 * x[key] / m)}%"></i>`).join("")}</div>`; }
 function renderPlan() {
   const p = S.plan, el = $("#tab-plan"), mNow = new Date().getMonth(), months = T.months[LANG === "ar" ? 1 : 0];
-  const w = p.water, over = w.need_next7_m3 > w.available_m3_week && w.available_m3_week > 0, mx = Math.max(w.need_next7_m3, w.available_m3_week, 1) * 1.1;
   el.innerHTML = `<div class="stack">
   <div class="sec-title"><h2>${t("calendar")}</h2><span class="tag">NASA POWER</span></div>
   ${p.advice.map(a => `<div class="note ${a.type === "cold" ? "info" : ""}"><span>${esc(tx(a))}</span></div>`).join("")}
@@ -820,12 +883,8 @@ function renderPlan() {
   </tbody></table></div>
   <div class="legend"><span><i style="background:var(--leaf);opacity:.55"></i>${t("lgPlant")}</span><span><i style="background:var(--leaf)"></i>${t("lgGrow")}</span><span><i style="background:var(--sun)"></i>${t("lgHarv")}</span><span><i style="background:var(--danger);width:3px"></i>${t("lgNow")}</span></div>
   <p class="muted" style="font-size:12px;margin:0">${t("calFrom", { p: p.climatology_period || "" })}</p>
-  <div class="sec-title"><h2>${t("waterWeek")}</h2><span class="tag">Open-Meteo · FAO-56</span></div>
-  <div class="card stack" style="gap:10px">
-   <div class="wbar"><span>${t("need")}</span><div class="track"><i style="width:${w.need_next7_m3 / mx * 100}%;background:${over ? css("--danger") : css("--water")}"></i></div><b class="mono">${fmtNum(w.need_next7_m3)} m³</b></div>
-   <div class="wbar"><span>${t("avail")}</span><div class="track"><i style="width:${w.available_m3_week / mx * 100}%;background:var(--ok)"></i></div><b class="mono">${fmtNum(w.available_m3_week)} m³</b></div>
-   ${w.available_m3_week > 0 ? `<div class="note ${over ? "" : "ok"}" style="font-size:13px"><span>${over ? t("overBudget", { m: fmtNum(w.need_next7_m3 - w.available_m3_week) }) : t("inBudget", { m: fmtNum(w.available_m3_week - w.need_next7_m3) })}</span></div>` : ""}
-  </div>
+  <div class="sec-title"><h2>${t("wpTitle")}</h2><span class="tag">FAO-56 · Open-Meteo</span></div>
+  ${weeklyInput()}${waterPlanHTML(p.water)}
   <div class="sec-title"><h2>${t("seedBank")}</h2></div>
   <div class="card row" style="gap:16px"><div class="grade-big">${p.grade.grade}</div><div><b>${t("resilience")}</b><div class="muted" style="font-size:14px">${t("gradeWhy", { n: p.grade.crop_types, d: p.grade.drought_tolerant })}</div></div></div>
   ${p.trend?.years ? `<div class="card stack" style="gap:6px"><b>${t("trendTitle", { y: p.trend.years })}</b><span class="muted" style="font-size:13px">${t("trendBody", { r: (p.trend.rain_pct_per_decade > 0 ? "+" : "") + p.trend.rain_pct_per_decade, t: (p.trend.temp_c_per_decade > 0 ? "+" : "") + p.trend.temp_c_per_decade })}</span>${bars(p.trend.rain_series, "mm")}</div>` : ""}
@@ -834,7 +893,7 @@ function renderPlan() {
   ${p.ndvi_series.length ? `<div class="card">${bars(p.ndvi_series, "v", "ndvi", 1)}<div class="muted mono" style="font-size:12px">${fmtDate(p.ndvi_series[0].date)} – ${fmtDate(p.ndvi_series.at(-1).date)} · ${t("ndvi")} ${fmtNum(p.ndvi_series.at(-1).v, 2)}</div></div>` : `<div class="note info"><span>${t("noSat")}</span></div>`}
   ${p.smap_series.length ? `<div class="sec-title"><h2>${t("smapTitle")}</h2></div><div class="card">${bars(p.smap_series, "v", "", .5)}<div class="muted mono" style="font-size:12px">${fmtNum(p.smap_series.at(-1).v, 3)} m³/m³ · ${fmtDate(p.smap_series.at(-1).date)}</div></div>` : ""}
   </div>`;
-  paintIcons(el);
+  paintIcons(el); bindWeekly();
 }
 
 /* ---- spray ---- */
@@ -876,12 +935,16 @@ function renderAlerts() {
 
 /* ---- more ---- */
 function renderMore() {
-  const st = P(); if (!st) return; const sat = st.satellite, gr = st.plot.grid, satL = T.satStatus[sat.status] || [sat.status, sat.status];
+  const st = P(); if (!st) { $("#tab-more").innerHTML = `<div class="empty"><span class="spinner"></span><p>${t("loading")}</p></div>`; return; } const sat = st.satellite, gr = st.plot.grid, satL = T.satStatus[sat.status] || [sat.status, sat.status];
   $("#tab-more").innerHTML = `<div class="stack">
   <div class="sec-title"><h2>${t("language")}</h2></div>
   <div class="seg" id="langSeg"><button data-v="en" aria-pressed="${LANG === "en"}">English</button><button data-v="ar" aria-pressed="${LANG === "ar"}">العربية</button></div>
   <div class="sec-title"><h2>${t("fieldInfo")}</h2></div>
   <div class="card kv"><span>${t("area")}</span><b>${fmtNum(st.plot.area_m2 / 1000, 1)} ${t("dunums")}</b><span>${t("squareDims")}</span><b>${fmtNum(gr.square_w_m)} × ${fmtNum(gr.square_h_m)} m</b><span>${tx({ en: "Squares", ar: "عدد المربعات" })}</span><b>${gr.squares}</b><span>${tx({ en: "Edge lengths", ar: "أطوال الأضلاع" })}</span><b class="mono" style="font-size:12px">${gr.edges_m.map(x => fmtNum(x)).join(" · ")} m</b></div>
+  <div class="card stack" style="gap:8px"><span class="label">${t("changeSize")}</span>
+    <div class="size-row"><label><span>${t("along")}</span><input id="rgW" type="number" min="3" max="1000" step="1" value="${gr.square_w_m}"></label><span class="muted">×</span>
+    <label><span>${t("across")}</span><input id="rgH" type="number" min="3" max="1000" step="1" value="${gr.square_h_m}"></label><span class="muted">m</span>
+    <button class="btn sm" data-act="regrid">${t("apply")}</button></div><span class="muted" style="font-size:12.5px">${t("sizeHelp")}</span></div>
   <div class="sec-title"><h2>${t("myPlots")}</h2></div>
   ${S.plots.map(p => `<button class="list-item${p.id === S.plotId ? " on" : ""}" data-act="switchPlot" data-id="${p.id}"><div style="flex:1;min-width:0"><b>${esc(p.name)}</b><div class="muted" style="font-size:13px">${esc(p.region)} · ${fmtNum(p.area_m2 / 1000, 1)} ${t("dunums")}</div></div></button>`).join("")}
   <button class="btn ghost" data-act="addPlot">+ ${t("addPlot")}</button>
@@ -893,13 +956,38 @@ function renderMore() {
   <div class="sec-title"><h2>${t("dataSources")}</h2></div>
   <div class="card" style="padding-block:4px">${st.sources.map(s => `<div class="src-row"><b>${s.ok ? "" : "⚠ "}${esc(s.name)}</b><span class="tag">${s.fetched_at ? new Date(s.fetched_at).toLocaleString(loc(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : ""}</span><span class="muted" style="grid-column:1/-1">${esc(s.detail)}${s.error ? " · " + esc(s.error) : ""}</span></div>`).join("")}</div>
   <div class="sec-title"><h2>${t("history")}</h2></div><div id="eventsBox"><span class="spinner"></span></div>
+  <div class="sec-title"><h2>${t("farmKey")}</h2></div>
+  <div class="card stack" style="gap:8px"><span class="muted" style="font-size:13px">${t("farmKeyHelp")}</span><div class="keybox" id="keyText">${esc(FARM_KEY)}</div>
+    <button class="btn sm ghost" data-act="copyKey">${t("copy")}</button>
+    <details><summary class="muted" style="font-size:13px;cursor:pointer">${t("useOtherKey")}</summary><div class="map-search" style="margin-top:8px"><input id="otherKeyIn" autocomplete="off" placeholder="${esc(t("keyPh"))}"><button class="btn sm" data-act="otherKey">${t("open")}</button></div></details></div>
+  <div class="sec-title"><h2>${t("aboutTitle")}</h2></div>
+  <div class="card about">${aboutHTML()}</div>
   <button class="btn ghost" data-act="tutorial">${t("replay")}</button>
-  <button class="btn ghost" data-act="signOut">${t("signOut")}</button>
   <button class="btn danger-btn" data-act="deletePlot">${t("deletePlot")}</button>
   <p class="muted" style="font-size:13px;margin:0">${t("about")}</p></div>`;
   api(`/plots/${S.plotId}/events`).then(ev => { const box = $("#eventsBox"); if (!box) return;
     box.innerHTML = ev.length ? `<div class="card" style="padding-block:4px">${ev.slice(0, 30).map(e => { const tl = e.tile_id ? tileById(e.tile_id) : null;
       return `<div class="src-row"><b>${esc(pick2(T.evKind[e.kind] || [e.kind, e.kind]))}${e.data.crop ? " · " + esc(cName(e.data.crop)) : ""}${e.data.mm ? " · " + e.data.mm + " mm" : ""}${e.data.start ? " · " + esc(e.data.start.replace("T", " ")) : ""}</b><span class="muted">${tl ? tileLabel(tl) : ""}</span><span class="muted" style="grid-column:1/-1">${fmtDate(e.date)}</span></div>`; }).join("")}</div>` : `<p class="muted">–</p>`; }).catch(() => {});
+}
+
+function aboutHTML() {
+  const en = LANG !== "ar";
+  const L2 = (a, b) => en ? a : b;
+  return `<h3>${L2("What it does", "ماذا يفعل")}</h3>
+  <p>${L2("Farm Studio turns NASA Earth data into daily decisions for a real field in Jordan: which crops suit it, when and how much to water from a weekly allowance, when spraying is safe, how to prepare for frost, heat and heavy rain, and when to harvest.", "يحوّل فارم ستوديو بيانات ناسا لرصد الأرض إلى قرارات يومية لأرض حقيقية في الأردن: المحاصيل المناسبة، ومتى وكم نسقي من الكمية الأسبوعية، ومتى يكون الرش آمنًا، والاستعداد للصقيع والحر والأمطار الغزيرة، وموعد الحصاد.")}</p>
+  <h3>${L2("NASA data used", "بيانات ناسا المستخدمة")}</h3><ul>
+  <li><a href="https://power.larc.nasa.gov/" target="_blank" rel="noopener">NASA POWER</a> — ${L2("25-year climate, climate trends and recent daily weather: drives crop suitability, the planting calendar and harvest timing.", "مناخ 25 عامًا واتجاهاته والطقس اليومي الحديث: أساس ملاءمة المحاصيل وتقويم الزراعة وموعد الحصاد.")}</li>
+  <li><a href="https://appeears.earthdatacloud.nasa.gov/" target="_blank" rel="noopener">NASA AppEEARS</a>: SMAP L4 ${L2("soil moisture", "رطوبة التربة")}, MODIS MOD13Q1 NDVI, ECOSTRESS ${L2("land surface temperature (cold spots)", "حرارة سطح الأرض (البقع الباردة)")}.</li>
+  <li><a href="https://lpdaac.usgs.gov/products/srtmgl1v003/" target="_blank" rel="noopener">SRTM GL1</a> — ${L2("30 m elevation for low, frost-prone squares.", "ارتفاع بدقة 30 م لتحديد المربعات المنخفضة المعرضة للصقيع.")}</li></ul>
+  <h3>${L2("Other sources", "مصادر أخرى")}</h3><ul>
+  <li><a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> — ${L2("10-day forecast and reference evaporation (ET0).", "توقعات 10 أيام والتبخر المرجعي (ET0).")}</li>
+  <li><a href="https://soilgrids.org/" target="_blank" rel="noopener">ISRIC SoilGrids</a>, <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>, ${L2("Esri World Imagery, FAO-56 (crop water) and FAO ECOCROP (crop climate ranges).", "صور Esri، ودليل FAO-56 (مياه المحاصيل)، وقاعدة FAO ECOCROP (نطاقات المناخ للمحاصيل).")}</li></ul>
+  <h3>${L2("Assumptions and limits", "الافتراضات والحدود")}</h3><ul>
+  <li>${L2("The watering plan assumes you follow it; it does not measure the soil directly. Satellite soil moisture (SMAP, 9 km) is shown for comparison.", "تفترض خطة الري أنك تتبعها؛ ولا تقيس التربة مباشرة. تُعرض رطوبة التربة من القمر الصناعي (SMAP بدقة 9 كم) للمقارنة.")}</li>
+  <li>${L2("Crop values come from FAO references and should be checked by an agricultural engineer for local varieties.", "قيم المحاصيل من مراجع FAO ويجب أن يراجعها مهندس زراعي للأصناف المحلية.")}</li>
+  <li>${L2("Forecasts can change; check the plan again before acting.", "قد تتغير التوقعات؛ راجع الخطة قبل التنفيذ.")}</li></ul>
+  <h3>${L2("Use of AI", "استخدام الذكاء الاصطناعي")}</h3>
+  <p>${L2("Parts of the code and text were written with an AI coding assistant (Claude). The team reviewed and tested the results; no NASA logos or branding were generated.", "كُتبت أجزاء من الكود والنصوص بمساعدة أداة ذكاء اصطناعي للبرمجة (Claude). راجع الفريق النتائج واختبرها؛ ولم يتم توليد أي شعارات أو هوية بصرية لناسا.")}</p>`;
 }
 
 /* ---- tutorial ---- */
@@ -917,14 +1005,14 @@ function coach(i) {
 function closeCoach() { $$("#layer .coach-ring,#layer .coach-card").forEach(e => e.remove()); }
 
 /* ================= events ================= */
-async function setLang(l) { LANG = l; store.set("fs_lang", l); applyI18n(); renderAuth(); if (!$("#scr-onboard").hidden) { renderOnboard(); $("#regionChips").innerHTML = regionChips(); } if (!$("#scr-main").hidden) { renderHUD(); renderSidebar(); refreshHint(); renderTabAgain(); } if (TOKEN) api("/me", { method: "PATCH", body: { lang: l } }).catch(() => {}); }
+async function setLang(l) { LANG = l; store.set("fs_lang", l); applyI18n(); if (!$("#scr-onboard").hidden) { renderOnboard(); $("#regionChips").innerHTML = regionChips(); } if (!$("#scr-main").hidden) { renderHUD(); renderSidebar(); refreshHint(); renderTabAgain(); } api("/me", { method: "PATCH", body: { lang: l } }).catch(() => {}); }
 $("#placeForm").addEventListener("submit", e => { e.preventDefault(); searchPlace($("#placeQ").value); });
 document.addEventListener("click", async e => {
   if (suppressClick) { suppressClick = false; if (e.target.closest("#toolSickle")) return; }
   const a = e.target.closest("[data-act]"), act = a?.dataset.act;
   const crop = e.target.closest(".sb-crop"); if (crop) { const id = crop.dataset.crop; S.sel = S.sel === id ? null : id; renderSidebar(); refreshHint(); return; }
   const tool = e.target.closest(".tool"); if (tool) { const k = tool.dataset.tool; S.sel = null;
-    if (k === "topo") S.topo = !S.topo; else if (k === "water") { const th = P().tiles.filter(thirsty); if (th.length) waterSheet(th[0]); else toast(t("noNeed")); }
+    if (k === "topo") S.topo = !S.topo; else if (k === "water") waterPlanSheet();
     renderSidebar(); refreshHint(); return; }
   const tab = e.target.closest(".tab"); if (tab) { switchTab(tab.dataset.tab); return; }
   const pk = e.target.closest("[data-pick]"); if (pk && !e.target.closest("details")) { const id = pk.dataset.pick; OB.picks.has(id) ? OB.picks.delete(id) : OB.picks.add(id); pk.setAttribute("aria-pressed", OB.picks.has(id)); return; }
@@ -932,7 +1020,7 @@ document.addEventListener("click", async e => {
   const pl = e.target.closest("[data-place]"); if (pl) { goPlace(placeResults[+pl.dataset.place]); return; }
   const slot = e.target.closest(".slot"); if (slot && !slot.disabled) { onSlot(slot.dataset.slot); return; }
   const seg = e.target.closest(".seg button"); if (seg && !act) { const p = seg.parentElement; p.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b === seg));
-    if (p.id === "authMode") { authMode = seg.dataset.v; renderAuth(); } if (p.id === "segIrr") OB.irr = seg.dataset.v; if (p.id === "segPri") OB.pri = seg.dataset.v; if (p.id === "sprayTool") S.sprayTool = seg.dataset.v; if (p.id === "langSeg") setLang(seg.dataset.v); return; }
+    if (p.id === "segIrr") OB.irr = seg.dataset.v; if (p.id === "segPri") OB.pri = seg.dataset.v; if (p.id === "sprayTool") S.sprayTool = seg.dataset.v; if (p.id === "langSeg") setLang(seg.dataset.v); return; }
   switch (act) {
     case "lang": setLang(LANG === "en" ? "ar" : "en"); break;
     case "locate": if (!navigator.geolocation) { toast(t("locFail")); break; } navigator.geolocation.getCurrentPosition(p => map?.setView([p.coords.latitude, p.coords.longitude], 17), () => toast(t("locFail")), { enableHighAccuracy: true, timeout: 10000 }); break;
@@ -940,22 +1028,26 @@ document.addEventListener("click", async e => {
     case "clearCorners": OB.corners = []; drawCorners(); break;
     case "square": { const du = +$("#sqArea").value; if (!(du > 0) || !map) break; const c = map.getCenter(), half = Math.sqrt(du * 1000) / 2, dlat = half / 110540, dlon = half / (111320 * Math.cos(c.lat * Math.PI / 180));
       OB.corners = [[c.lat + dlat, c.lng - dlon], [c.lat + dlat, c.lng + dlon], [c.lat - dlat, c.lng + dlon], [c.lat - dlat, c.lng - dlon]].map(p => [+p[0].toFixed(6), +p[1].toFixed(6)]); drawCorners(); map.fitBounds(OB.corners, { padding: [30, 30] }); break; }
-    case "obBack": if (OB.step === 1) { if (S.plots.length) enterMain(); else signOut(); } else { OB.step--; renderOnboard(); } break;
+    case "obBack": if (OB.step === 1) { if (S.plots.length) enterMain(); else show("auth"); } else { OB.step--; renderOnboard(); } break;
     case "obNext": if (OB.step === 1) { OB.step = 2; renderOnboard(); } else if (OB.step === 2) { if (validateStep2()) { OB.step = 3; renderOnboard(); runAnalysis(); } } else createPlot(); break;
     case "retryAnalyze": runAnalysis(); break;
+    case "pickSoil": OB.step = 2; $("#fSoil").value = ""; $("#ob3Err").hidden = true; renderOnboard(); fieldErr("#fSoilWrap", true); $("#fSoil").focus(); $("#fSoilWrap").scrollIntoView({ block: "center" }); break;
     case "closeSheet": closeSheet(); break;
-    case "waitRain": closeSheet(); await guard(async () => { const id = +a.dataset.id; applyState(await api(`/plots/${S.plotId}/wait-rain`, { method: "POST", body: { tile_ids: [id] } })); floatAt(id, "☁", "#fff"); }); break;
-    case "waterNow": irrigate(+a.dataset.id, +a.dataset.mm); break;
-    case "openWater": { const tl = tileById(+a.dataset.id); closeSheet(); if (tl) waterSheet(tl); break; }
     case "plantHere": { const tl = tileById(+a.dataset.id); closeSheet(); if (tl) plantSheet(tl, a.dataset.crop); break; }
     case "clearSquare": closeSheet(); await guard(async () => applyState(await api(`/plots/${S.plotId}/clear`, { method: "POST", body: { tile_ids: [+a.dataset.id] } }))); break;
     case "addCropSheet": addCropSheet(); break;
+    case "waterPlan": closeSheet(); waterPlanSheet(); break;
+    case "start": startOnboard(); break;
+    case "sqAuto": OB.sq = null; schedulePreview(); break;
+    case "copyKey": try { await navigator.clipboard.writeText(FARM_KEY); toast(t("copied")); } catch { const r = document.createRange(); r.selectNodeContents($("#keyText")); getSelection().removeAllRanges(); getSelection().addRange(r); } break;
+    case "otherKey": { const k = $("#otherKeyIn")?.value; useKey(k); break; }
+    case "regrid": { const sz = readSize("#rgW", "#rgH"); if (!sz) break; closeSheet(); await guard(async () => { busy(true); try { S.state = await api(`/plots/${S.plotId}/regrid`, { method: "POST", body: { square_w_m: sz.w, square_h_m: sz.h } }); cam.fitted = false; decorKey = ""; renderHUD(); renderSidebar(); sizeFarm(); renderMore(); toast(t("resized")); } finally { busy(false); } }); break; }
     case "refresh": await guard(() => loadPlot()); break;
     case "zoomIn": zoomAt(1.25, (W - 96) / 2, H / 2); break;
     case "zoomOut": zoomAt(.8, (W - 96) / 2, H / 2); break;
     case "zoomFit": cam.fitted = false; fitCam(); break;
     case "goAlerts": switchTab("alerts"); break;
-    case "goPlan": switchTab("plan"); break;
+    case "goPlan": closeSheet(); switchTab("plan"); break;
     case "reloadTab": loadTab(S.tab); break;
     case "alertDo": await guard(async () => { applyState(await api(`/plots/${S.plotId}/alerts/act`, { method: "POST", body: { key: a.dataset.k, idx: +a.dataset.i } })); S.alerts = await api(`/plots/${S.plotId}/alerts`); renderAlerts(); }); break;
     case "addCrop": await guard(async () => { const crops = [...new Set([...P().plot.crops, a.dataset.id])]; await api(`/plots/${S.plotId}`, { method: "PATCH", body: { crops } }); closeSheet(); await loadPlot(); if (S.tab === "plan") loadTab("plan"); toast(cName(a.dataset.id) + " ✓"); }); break;
@@ -965,7 +1057,6 @@ document.addEventListener("click", async e => {
     case "satRefresh": await guard(async () => { const r = await api(`/plots/${S.plotId}/satellite/refresh`, { method: "POST" }); toast(pick2(T.satStatus[r.status] || [r.status, r.status])); await loadPlot(); renderMore(); }); break;
     case "deletePlot": sheet(`<div class="stack"><p>${t("confirmDelete", { n: esc(P().plot.name) })}</p><button class="btn danger-btn block" data-act="deleteYes">${t("yesDelete")}</button><button class="btn ghost block" data-act="closeSheet">${t("cancel")}</button></div>`); break;
     case "deleteYes": closeSheet(); await guard(async () => { await api(`/plots/${S.plotId}`, { method: "DELETE" }); S.plots = await api("/plots"); if (S.plots.length) { S.plotId = S.plots[0].id; store.set("fs_plot", S.plotId); switchTab("farm"); await loadPlot(true); } else startOnboard(); }); break;
-    case "signOut": signOut(); break;
     case "tutorial": switchTab("farm"); setTimeout(() => coach(0), 120); break;
     case "coachNext": coach(+a.dataset.i); break;
     case "coachSkip": closeCoach(); store.set("fs_tut", "1"); break;
@@ -982,10 +1073,8 @@ window.FarmStudioTest = { squareCenter(id) { const tl = tileById(id); if (!tl) r
 /* ================= boot ================= */
 (async function boot() {
   LANG = store.get("fs_lang") || ((navigator.language || "").startsWith("ar") ? "ar" : "en");
-  applyI18n(); renderAuth(); requestAnimationFrame(loop);
+  applyI18n(); requestAnimationFrame(loop);
   try { const list = await api("/crops"); list.forEach(c => S.crops[c.id] = c); } catch (e) { toast(e.message); }
-  if (!TOKEN) { show("auth"); return; }
-  try { S.user = await api("/me"); if (S.user.lang && !store.get("fs_lang")) { LANG = S.user.lang; applyI18n(); } await afterLogin(); }
-  catch { show("auth"); }
+  try { await afterStart(); } catch (e) { show("auth"); toast(e.message); }
 })();
 })();

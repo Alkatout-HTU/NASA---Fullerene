@@ -21,8 +21,8 @@ def test_polygon_area_one_hectare():
 
 def test_grid_marks_cells_inside_triangle():
     tri = [[32.01, 35.90], [32.00, 35.91], [32.00, 35.90]]
-    cells = geo.grid(tri, 6)
-    assert 0 < sum(c["inside"] for c in cells) < 36
+    cells = geo.grid(tri)["cells"]
+    assert 0 < sum(c["inside"] for c in cells) < len(cells)
 
 
 def test_texture_triangle():
@@ -56,21 +56,41 @@ def test_rainfed_rejects_irrigation_only_crops():
     assert r["score"] <= 15
 
 
-def test_water_balance_flags_dry_soil_and_rain_wait():
+def _days(today, n_past, et0, rain_future=None):
+    out = [{"date": (today - dt.timedelta(days=n_past - i)).isoformat(), "et0": et0, "rain": 0.0} for i in range(n_past)]
+    for k in range(7):
+        out.append({"date": (today + dt.timedelta(days=k)).isoformat(), "et0": et0, "rain": (rain_future or {}).get(k, 0.0)})
+    return out
+
+
+def test_weekly_schedule_gives_dates_and_amounts():
+    tom = CROPS["tomato"]
+    today = dt.date(2026, 7, 1)
+    plan = water.schedule(tom, today - dt.timedelta(days=80), "loam", _days(today, 30, 7.0), today, 0.12, True)
+    assert plan["events"], "a fruiting tomato in July must need water this week"
+    assert all(0 < e["mm"] <= water.MAX_APPLICATION_MM for e in plan["events"])
+    # weekly need roughly equals crop water use (Kc x ET0 x 7 days)
+    assert 0.6 * plan["etc_week_mm"] <= plan["need_mm_week"] <= 1.4 * plan["etc_week_mm"] + water.MAX_APPLICATION_MM
+
+
+def test_rain_postpones_watering():
     tom = CROPS["tomato"]
     today = dt.date(2026, 11, 13)
-    days = [{"date": (today - dt.timedelta(days=30 - i)).isoformat(), "et0": 5.0, "rain": 0.0} for i in range(31)]
-    days += [{"date": (today + dt.timedelta(days=1)).isoformat(), "et0": 2.0, "rain": 100.0}]
-    out = water.simulate(tom, today - dt.timedelta(days=60), "loam", days, today, {}, 0.12, True)
-    assert out["needs_water"] and out["wait_for_rain"]
-    irrigated = water.simulate(tom, today - dt.timedelta(days=60), "loam", days, today, {today.isoformat(): 200}, 0.12, True)
-    assert not irrigated["needs_water"]
+    dry = water.schedule(tom, today - dt.timedelta(days=80), "loam", _days(today, 30, 4.0), today, 0.12, True)
+    wet = water.schedule(tom, today - dt.timedelta(days=80), "loam", _days(today, 30, 4.0, {1: 60.0, 2: 40.0}), today, 0.12, True)
+    assert wet["need_mm_week"] < dry["need_mm_week"]
 
 
 def test_dormant_vines_do_not_need_water():
-    out = water.simulate(CROPS["grape"], dt.date(2020, 3, 1), "loam",
-                         [{"date": "2026-12-01", "et0": 2.0, "rain": 0.0}], dt.date(2026, 12, 1), {}, 0.1, True)
-    assert out["dormant"] and not out["needs_water"]
+    today = dt.date(2026, 12, 1)
+    out = water.schedule(CROPS["grape"], dt.date(2020, 3, 1), "loam", _days(today, 10, 2.0), today, 0.1, True)
+    assert out["dormant"] and not out["events"]
+
+
+def test_rainfed_farm_gets_no_watering_dates():
+    today = dt.date(2026, 7, 1)
+    out = water.schedule(CROPS["wheat"], today - dt.timedelta(days=60), "loam", _days(today, 30, 7.0), today, 0.1, False)
+    assert out["events"] == []
 
 
 def test_annual_harvest_date():
@@ -106,15 +126,25 @@ def test_aaigrid_sampling():
     assert elevation.sample(g, 32.05, 35.25) == 6
 
 
-def test_grid_follows_field_shape_and_size():
-    # 400 m x 100 m strip: squares should stay close to square, not stretched
-    poly = [[32.0, 35.9], [32.0, 35.9 + 400 / geo.m_per_deg_lon(32.0)],
-            [32.0 - 100 / geo.M_PER_DEG_LAT, 35.9 + 400 / geo.m_per_deg_lon(32.0)], [32.0 - 100 / geo.M_PER_DEG_LAT, 35.9]]
-    cols, rows, w, h = geo.grid_size(poly)
-    assert cols > rows and 0.6 < w / h < 1.6
-    cells = geo.grid(poly)
-    total = sum(c["area_m2"] for c in cells if c["inside"])
-    assert abs(total - 40_000) < 400
+def test_grid_follows_rotated_field_exactly():
+    import math
+    k, j, th = 1 / geo.M_PER_DEG_LAT, 1 / geo.m_per_deg_lon(32.0), math.radians(30)
+    pts = []
+    for x, y in [(0, 0), (300, 0), (300, 100), (0, 100)]:
+        pts.append([32 + (x * math.sin(th) + y * math.cos(th)) * k, 35.9 + (x * math.cos(th) - y * math.sin(th)) * j])
+    g = geo.grid(pts, 25, 25)
+    assert abs(g["angle_deg"] - 30) < 0.5
+    assert (g["cols"], g["rows"], g["squares"]) == (12, 4, 48)
+    assert abs(sum(c["area_m2"] for c in g["cells"]) - 30_000) < 100
+
+
+def test_custom_square_size_and_limits():
+    poly = geo.square_around(32.0, 35.9, 100 * 100)
+    g = geo.grid(poly, 20, 10)
+    assert (g["cols"], g["rows"]) in ((5, 10), (10, 5))
+    import pytest
+    with pytest.raises(geo.GridError):
+        geo.grid(geo.square_around(32.0, 35.9, 1_000_000), 3, 3)
 
 
 def test_grid_l_shape_leaves_corner_out():
@@ -123,10 +153,11 @@ def test_grid_l_shape_leaves_corner_out():
     # 200 m x 200 m L-shape: the north-east 100 x 100 m is missing
     poly = [[32.0, 35.9], [32.0, 35.9 + 100 * j], [32.0 - 100 * k, 35.9 + 100 * j], [32.0 - 100 * k, 35.9 + 200 * j],
             [32.0 - 200 * k, 35.9 + 200 * j], [32.0 - 200 * k, 35.9]]
-    cells = geo.grid(poly)
-    ne = [c for c in cells if c["r"] == 0 and c["c"] == max(x["c"] for x in cells)][0]
+    g = geo.grid(poly, 25, 25)
+    assert g["angle_deg"] == 0
+    ne = [c for c in g["cells"] if c["r"] == 0 and c["c"] == g["cols"] - 1][0]
     assert not ne["inside"]
-    assert abs(sum(c["area_m2"] for c in cells) - 30_000) < 600
+    assert abs(sum(c["area_m2"] for c in g["cells"]) - 30_000) < 300
 
 
 def test_match_typed_crops():
@@ -147,3 +178,15 @@ def test_perennial_not_ready_after_harvest_this_season():
     assert st["ready"]
     st = phenology.status(CROPS["olive"], dt.date(2015, 1, 1), dt.date(2026, 11, 1), {}, None, dt.date(2026, 10, 20))
     assert not st["ready"] and st["harvested_this_season"]
+
+
+def test_farm_key_identity():
+    from fastapi.testclient import TestClient
+    from app.main import app
+    with TestClient(app) as cl:
+        assert cl.get("/api/plots").status_code == 400  # no key
+        h = {"X-Farm-Key": "test-key-" + "x" * 30}
+        assert cl.get("/api/plots", headers=h).json() == []
+        assert cl.get("/api/me", headers=h).status_code == 200
+        r = cl.post("/api/grid/preview", json={"polygon": geo.square_around(32.0, 35.9, 10_000), "square_w_m": 20, "square_h_m": 20})
+        assert r.status_code == 200 and r.json()["squares"] == 25

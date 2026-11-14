@@ -18,26 +18,6 @@ def _crop_list(v: list[str]) -> list[str]:
     return list(dict.fromkeys(v))
 
 
-class Register(BaseModel):
-    email: str = Field(min_length=3, max_length=255)
-    password: str = Field(min_length=8, max_length=200)
-    name: str = Field(default="", max_length=120)
-    lang: Lang = "en"
-
-    @field_validator("email")
-    @classmethod
-    def _email(cls, v: str) -> str:
-        v = v.strip().lower()
-        if "@" not in v or "." not in v.split("@")[-1]:
-            raise ValueError("enter a valid e-mail address")
-        return v
-
-
-class Login(BaseModel):
-    email: str
-    password: str
-
-
 class Polygon(BaseModel):
     polygon: list[list[float]] = Field(min_length=3, max_length=200)
 
@@ -63,6 +43,8 @@ class FarmInputs(Polygon):
     prev_crops: list[str] = []
     keep_crops: list[str] = []
     wanted: str = Field(default="", max_length=500)  # crops the farmer typed, any language
+    square_w_m: float | None = Field(default=None, ge=3, le=1000)  # square size along the field; None = automatic
+    square_h_m: float | None = Field(default=None, ge=3, le=1000)  # square size across the field
     lang: Lang = "en"
 
     @field_validator("prev_crops", "keep_crops")
@@ -101,6 +83,16 @@ class PlotUpdate(BaseModel):
         return _crop_list(v) if v is not None else v
 
 
+class GridPreview(Polygon):
+    square_w_m: float | None = Field(default=None, ge=3, le=1000)
+    square_h_m: float | None = Field(default=None, ge=3, le=1000)
+
+
+class Regrid(BaseModel):
+    square_w_m: float = Field(ge=3, le=1000)
+    square_h_m: float = Field(ge=3, le=1000)
+
+
 class Evaluate(BaseModel):
     text: str = Field(min_length=1, max_length=500)
 
@@ -119,10 +111,6 @@ class Plant(TileAction):
         if v not in CROPS:
             raise ValueError("unknown crop")
         return v
-
-
-class Irrigate(TileAction):
-    mm: float | None = Field(default=None, gt=0, le=200)  # default: refill to field capacity
 
 
 class SprayBook(BaseModel):
