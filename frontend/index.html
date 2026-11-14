@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;700;800&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="/static/app.css">
+<link rel="icon" href="/static/icon.svg" type="image/svg+xml">
 </head>
 <body>
 <div class="app" id="app">
@@ -24,10 +25,12 @@
           <h1 data-t="appName"></h1>
         </div>
         <p class="muted" style="margin:0" data-t="tagline"></p>
-        <button class="btn block" data-act="start" data-t="startBtn"></button>
+        <button class="btn block" data-act="demo" id="demoBtn" data-t="demoBtn"></button>
+        <button class="btn ghost block" data-act="start" data-t="startBtn"></button>
         <p class="muted" style="margin:0;font-size:13px" data-t="noAccount"></p>
         <details><summary class="muted" style="cursor:pointer;font-size:13px" data-t="haveKey"></summary>
           <form class="map-search" id="keyForm" style="margin-top:8px"><input id="keyIn" autocomplete="off" data-tp="keyPh"><button class="btn sm" type="submit" data-t="open"></button></form>
+          <button class="btn sm ghost" type="button" data-act="importFarm" style="margin-top:8px" data-t="importFarm"></button>
         </details>
       </div>
     </div>
@@ -132,6 +135,7 @@
       <button class="plot-btn" data-act="plots" id="plotBtn"><b id="plotName"></b><span id="plotMeta"></span></button>
       <button class="chip" data-act="goPlan" id="gradeChip"><span data-t="resilience"></span><b class="grade" id="gradeVal">–</b></button>
       <span class="chip" id="wxChip"></span>
+      <button class="chip bell" data-act="notices" id="bellBtn" aria-label="Reminders"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span class="count" id="bellCount" hidden></span></button>
     </div>
 
     <div class="screen" id="tab-farm">
@@ -162,6 +166,7 @@
   </section>
 
   <div id="layer"></div>
+  <input type="file" id="importFile" accept="application/json,.json" hidden>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="/static/app.js"></script>

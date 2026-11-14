@@ -243,6 +243,18 @@ async def regrid(db: Session, plot: Plot, square_w: float, square_h: float) -> P
 
 
 # ---------------------------------------------------------------- plot state
+def irrigation_by_tile(db: Session, plot_id: int) -> dict[int, dict[str, float]]:
+    """Waterings the farmer logged: {tile_id: {"YYYY-MM-DD": mm}}."""
+    out: dict[int, dict[str, float]] = {}
+    for ev in db.scalars(select(Event).where(Event.plot_id == plot_id, Event.kind == "irrigate")):
+        if not ev.tile_id:
+            continue
+        mm = float(jload(ev.data, {}).get("mm", 0.0) or 0.0)
+        d = out.setdefault(ev.tile_id, {})
+        d[ev.on_date.isoformat()] = d.get(ev.on_date.isoformat(), 0.0) + mm
+    return out
+
+
 async def context(plot: Plot) -> dict:
     """Fetch everything a plot view needs, in parallel. Missing sources come back as None."""
     today = dt.date.today()
@@ -258,7 +270,8 @@ def power_weather(lat: float, lon: float, daily: dict, clim: dict, today: dt.dat
     """Stand-in for the forecast when Open-Meteo is unavailable, built only from NASA POWER.
 
     Past 92 days: POWER daily temperature and rain, ET0 by Hargreaves (FAO-56 eq. 52).
-    Missing days and the coming 10 days: POWER long-term monthly normals. Marked `fallback`
+    Missing days and the coming 10 days: POWER long-term monthly temperature normals, with no rain
+    assumed. Marked `fallback`
     so nothing presents normals as a forecast (alerts and spraying are switched off).
     """
     days = []
@@ -270,7 +283,9 @@ def power_weather(lat: float, lon: float, daily: dict, clim: dict, today: dt.dat
             tmax, tmin, tmean, rain = o["tmax"], o["tmin"], o["t2m"], o.get("rain") or 0.0
         else:
             tmean, rng = clim["T2M"][m], clim["T2M_RANGE"][m] or 10.0
-            tmax, tmin, rain = tmean + rng / 2, tmean - rng / 2, clim["PRECTOTCORR"][m] or 0.0
+            # no rain on estimated days: averages spread rain evenly over every day, which real storms are not,
+            # and would hide watering that is needed. Planning dry is the safe choice for the farmer.
+            tmax, tmin, rain = tmean + rng / 2, tmean - rng / 2, 0.0
         doy = d.timetuple().tm_yday
         days.append({"date": d.isoformat(), "tmax": tmax, "tmin": tmin, "rain": rain, "rain_prob": None,
                      "et0": round(climate.et0_hargreaves(tmean, tmax, tmin, lat, doy), 2), "gust": None})
@@ -331,6 +346,7 @@ async def plot_state(db: Session, plot: Plot) -> dict:
     today = openmeteo.local_now(fc).date() if fc else dt.date.today()
     sat = jload(plot.satellite, {})
     obs = _obs_temps(ctx)
+    irrigation = irrigation_by_tile(db, plot.id)
     last_harvest: dict[int, dt.date] = {}
     for ev in db.scalars(select(Event).where(Event.plot_id == plot.id, Event.kind == "harvest")):
         if ev.tile_id and (ev.tile_id not in last_harvest or ev.on_date > last_harvest[ev.tile_id]):
@@ -354,8 +370,9 @@ async def plot_state(db: Session, plot: Plot) -> dict:
                 key = start.isoformat()
                 if key not in theta_cache:
                     theta_cache[key] = _theta_at(fc, key)
+                logs = {d: mm for d, mm in irrigation.get(t.id, {}).items() if d >= planting.planted_on.isoformat()}
                 wb = water.schedule(crop, planting.planted_on, plot.soil_class, fc["days"], today,
-                                    theta_cache[key], plot.farm_type != "rain")
+                                    theta_cache[key], plot.farm_type != "rain", irrigation=logs)
             item["planting"] = {"id": planting.id, "crop": crop.id, "planted_on": planting.planted_on.isoformat(),
                                 **ph, "water": wb}
         if t.inside:
@@ -561,3 +578,98 @@ async def spray_windows(plot: Plot) -> dict:
     now = openmeteo.local_now(fc)
     return {"timezone": fc["timezone"], "now": now.isoformat(timespec="minutes"),
             "blocks": spray.windows(fc["hours"], now), "fetched_at": at.isoformat() + "Z"}
+
+
+# ---------------------------------------------------------------- demo farm, export / import
+DEMO_NAME = "Demo farm"
+# A 50-dunum L-shaped field in the North Ghor (Jordan Valley). Only the field, crops and planting
+# dates are preset; climate, soil water, harvest dates, alerts and satellite layers are live.
+DEMO_POLYGON = [[32.47450, 35.59950], [32.47450, 35.60110], [32.47360, 35.60110], [32.47360, 35.60210],
+                [32.47230, 35.60210], [32.47230, 35.59950]]
+DEMO_PLANTS = [  # crop, planted days ago (None = a fixed past year for orchards), squares
+    ("tomato", 140, 4), ("cucumber", 35, 3), ("wheat", 12, 4),
+    ("grape", None, 4), ("olive", None, 3), ("citrus", None, 3), ("date", None, 2),
+]
+ORCHARD_PLANTED = {"grape": dt.date(2018, 3, 1), "olive": dt.date(2010, 1, 15), "citrus": dt.date(2016, 2, 1),
+                   "date": dt.date(2015, 2, 1)}
+
+
+async def create_demo(db: Session, user_id: int) -> Plot:
+    today = dt.date.today()
+    crops = [c for c, _, _ in DEMO_PLANTS]
+    plot = await create_plot(db, user_id, {
+        "name": f"{DEMO_NAME} · North Ghor", "polygon": DEMO_POLYGON, "soil": "loam", "farm_type": "irr",
+        "water_m3_week": 300, "budget_jod": 3000, "priority": "water", "prev_crops": [], "keep_crops": [],
+        "crops": crops, "lang": "en", "square_w_m": 20, "square_h_m": 20})
+    inside = [t for t in plot.tiles if t.inside]
+    i = 0
+    for crop, ago, n in DEMO_PLANTS:
+        planted = ORCHARD_PLANTED.get(crop) or (today - dt.timedelta(days=ago))
+        for t in inside[i:i + n]:
+            db.add(Planting(plot_id=plot.id, tile_id=t.id, crop=crop, planted_on=planted))
+            db.add(Event(plot_id=plot.id, tile_id=t.id, kind="plant", on_date=today, data=jdump({"crop": crop})))
+        i += n
+    db.commit()
+    db.refresh(plot)
+    return plot
+
+
+def _soil_choice(plot: Plot) -> str:
+    if plot.soil_source == "SoilGrids":
+        return "auto"
+    return {"clay": "clay", "sandy_loam": "sandy", "sand": "sandy", "loamy_sand": "sandy"}.get(plot.soil_class, "loam")
+
+
+def export_plot(db: Session, plot: Plot) -> dict:
+    tiles = {t.id: t for t in plot.tiles}
+    plantings = [{"lat": tiles[p.tile_id].lat, "lon": tiles[p.tile_id].lon, "crop": p.crop,
+                  "planted_on": p.planted_on.isoformat(), "active": p.active,
+                  "harvested_on": p.harvested_on.isoformat() if p.harvested_on else None}
+                 for t in plot.tiles for p in t.plantings]
+    events = []
+    for e in db.scalars(select(Event).where(Event.plot_id == plot.id)):
+        t = tiles.get(e.tile_id) if e.tile_id else None
+        events.append({"kind": e.kind, "date": e.on_date.isoformat(), "lat": t.lat if t else None,
+                       "lon": t.lon if t else None, "data": jload(e.data, {})})
+    return {"format": "farmstudio-farm-1", "exported_at": dt.datetime.utcnow().isoformat() + "Z",
+            "name": plot.name, "polygon": jload(plot.polygon, []), "soil": _soil_choice(plot),
+            "farm_type": plot.farm_type, "water_m3_week": plot.water_m3_week, "budget_jod": plot.budget_jod or 1,
+            "priority": plot.priority, "prev_crops": jload(plot.prev_crops, []), "crops": jload(plot.crops, []),
+            "square_w_m": plot.square_w_m, "square_h_m": plot.square_h_m, "plantings": plantings, "events": events}
+
+
+async def import_plot(db: Session, user_id: int, data: dict) -> Plot:
+    plot = await create_plot(db, user_id, {**data, "keep_crops": [], "lang": "en"})
+    inside = [t for t in plot.tiles if t.inside]
+
+    def nearest(lat, lon):
+        if lat is None or lon is None:
+            return None
+        return min(inside, key=lambda t: (t.lat - lat) ** 2 + (t.lon - lon) ** 2)
+
+    taken: set[int] = set()
+    for p in data.get("plantings", []):
+        try:
+            crop, planted = p["crop"], dt.date.fromisoformat(p["planted_on"])
+        except (KeyError, ValueError, TypeError):
+            continue
+        t = nearest(p.get("lat"), p.get("lon"))
+        if crop not in CROPS or t is None:
+            continue
+        active = bool(p.get("active")) and t.id not in taken
+        if active:
+            taken.add(t.id)
+        harvested = p.get("harvested_on")
+        db.add(Planting(plot_id=plot.id, tile_id=t.id, crop=crop, planted_on=planted, active=active,
+                        harvested_on=dt.date.fromisoformat(harvested) if harvested else None))
+    for e in data.get("events", []):
+        try:
+            on = dt.date.fromisoformat(e["date"])
+        except (KeyError, ValueError, TypeError):
+            continue
+        t = nearest(e.get("lat"), e.get("lon"))
+        db.add(Event(plot_id=plot.id, tile_id=t.id if t else None, kind=str(e.get("kind", ""))[:30], on_date=on,
+                     data=jdump(e.get("data") or {})))
+    db.commit()
+    db.refresh(plot)
+    return plot

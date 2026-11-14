@@ -101,6 +101,10 @@ class TileAction(BaseModel):
     tile_ids: list[int] = Field(min_length=1, max_length=400)
 
 
+class Irrigate(TileAction):
+    mm: float | None = Field(default=None, gt=0, le=200)  # default: today's planned amount, or refill the root zone
+
+
 class Plant(TileAction):
     crop: str
     planted_on: str | None = None  # ISO date; defaults to today (use a past date for existing orchards)
@@ -126,3 +130,52 @@ class AlertAction(BaseModel):
 class Prefs(BaseModel):
     lang: Lang | None = None
     name: str | None = Field(default=None, max_length=120)
+
+
+class ReminderPrefs(BaseModel):
+    enabled: bool | None = None
+    same_day: bool | None = None
+    same_day_time: str | None = Field(default=None, pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
+    day_before: bool | None = None
+    day_before_time: str | None = Field(default=None, pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
+    weekly: bool | None = None
+    weekly_day: int | None = Field(default=None, ge=0, le=6)
+    weekly_time: str | None = Field(default=None, pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
+    tz_offset_min: int | None = Field(default=None, ge=-14 * 60, le=14 * 60)
+
+
+class PushKeys(BaseModel):
+    p256dh: str = Field(min_length=40, max_length=200)
+    auth: str = Field(min_length=10, max_length=100)
+
+
+class PushSubscription(BaseModel):
+    endpoint: str = Field(min_length=10, max_length=1000, pattern=r"^https://")
+    keys: PushKeys
+
+
+class Unsubscribe(BaseModel):
+    endpoint: str = Field(max_length=1000)
+
+
+class FarmFile(BaseModel):
+    """A farm exported from one Farm Studio server, to import on another."""
+    format: Literal["farmstudio-farm-1"]
+    name: str = Field(min_length=1, max_length=120)
+    polygon: list[list[float]] = Field(min_length=3, max_length=200)
+    soil: Literal["loam", "clay", "sandy", "calc", "auto"] = "auto"
+    farm_type: Literal["rain", "irr", "both"] = "irr"
+    water_m3_week: float = Field(ge=0, le=1_000_000, default=0)
+    budget_jod: float = Field(gt=0, le=100_000_000, default=1)
+    priority: Literal["water", "soil", "cost"] = "water"
+    prev_crops: list[str] = []
+    crops: list[str] = Field(min_length=1)
+    square_w_m: float | None = Field(default=None, ge=3, le=1000)
+    square_h_m: float | None = Field(default=None, ge=3, le=1000)
+    plantings: list[dict] = []
+    events: list[dict] = []
+
+    @field_validator("crops", "prev_crops")
+    @classmethod
+    def _crops_known(cls, v: list[str]) -> list[str]:
+        return _crop_list(v)

@@ -36,7 +36,7 @@ poller runs inside the process. Back up `farmstudio.db`, or set `DATABASE_URL` t
 | Crop suitability and best planting month | NASA POWER 2001–2025 climatology, farmer's water and soil | `climate.py`: FAO ECOCROP temperature ranges, frost days, seasonal irrigation need from Hargreaves ET0 and FAO-56 Kc |
 | Climate trend and “plant drought-tolerant crops” advice | NASA POWER monthly series | Linear trend of annual rain and temperature per decade |
 | Late or early season advice | NASA POWER daily (last 30 days) vs climatology | Temperature anomaly |
-| Weekly watering plan: when, how much, is the weekly water enough | Open-Meteo ET0 and rain (92 past + 10 forecast days; NASA POWER observations and normals if the forecast is down), farmer's weekly water amount | `water.py` + `services.water_plan`: FAO-56 root-zone balance per square, refill when the crop's safe limit is reached; weekly water shared between crops in proportion to need |
+| Weekly watering plan and the farmer's watering log | Open-Meteo ET0 and rain (92 past + 10 forecast days; NASA POWER observations and normals if the forecast is down), farmer's weekly water amount and logged waterings | `water.py` + `services.water_plan`: FAO-56 root-zone balance per square; logged waterings are applied as they happened, otherwise the plan is assumed followed; weekly water shared between crops in proportion to need |
 | Harvest dates | Planting date; NASA POWER + forecast temperatures | `phenology.py`: FAO-56 season lengths, growing degree days for grapes, regional windows for olives, dates and citrus |
 | Safe-spray window | Open-Meteo hourly wind, gusts, rain, temperature, humidity | `spray.py`: label guidance (wind 3–15 km/h, no rain 4 h after, < 30 °C, RH > 40 %) |
 | Frost, heat, heavy rain, wind warnings | Open-Meteo 7-day forecast, SRTM low spots, ECOSTRESS cold spots | `alerts.py` |
@@ -70,3 +70,26 @@ server stores only its SHA-256 hash; the same key on another device opens the sa
 | GET | `/api/plots/{id}/plan` | Calendar, weekly water, grade, trend, suggestions, NDVI/SMAP series |
 | GET | `/api/plots/{id}/events` | Activity history |
 | POST | `/api/plots/{id}/satellite/refresh` | Request fresh AppEEARS data |
+| POST | `/api/plots/{id}/irrigate` | Log that squares were watered today (drag the watering can or hold a square) |
+| POST | `/api/demo` | Create (once per device) the demo farm in the North Ghor |
+| GET, POST | `/api/plots/{id}/export` · `/api/plots/import` | Move a farm between servers as a JSON file |
+| GET, PUT, POST | `/api/notify` · `/notify/prefs` · `/notify/subscribe` · `/notify/unsubscribe` · `/notify/read` · `/notify/test` | Reminders: settings, phone notifications (Web Push), list |
+
+## Watering reminders and phone notifications
+
+A background loop checks every minute and creates, once each, in the farmer's own time zone:
+a same-day reminder, a day-before reminder and a weekly plan per crop, at the times the farmer
+chose (More → Reminders, or the bell). Reminders always appear in the app's list (the bell).
+
+To also get them on a phone when the app is closed, tap **Turn on** in the reminder settings.
+The server sends them with the Web Push standard (VAPID keys are created automatically and
+stored in the database; no account or key is needed). Browsers only allow this on **HTTPS** or on
+`localhost`, so for phones put the server behind HTTPS (for example Caddy, nginx with
+Let's Encrypt, or a tunnel such as Cloudflare Tunnel during a demo). On iPhone, add the site to the
+Home Screen first (iOS 16.4+).
+
+## Farm keys, export and import
+
+There are no accounts. Each phone or browser gets a random farm key; the same key on another
+device opens the same farms **on the same server**. To move a farm to a different computer or
+server, use More → Export this farm, then Import a farm file on the other one.

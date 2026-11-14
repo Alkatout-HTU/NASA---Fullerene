@@ -292,3 +292,41 @@ textarea{font:inherit;padding:11px 12px;border-radius:12px;border:1px solid var(
 .about p,.about li{font-size:13.5px}
 .about ul{margin:4px 0;padding-inline-start:18px}
 .about a{color:var(--olive)}
+
+/* ---- v5: reminders, calendar, tutorial ---- */
+.bell{position:relative;padding:5px 9px}
+.bell .count{position:absolute;top:-5px;right:-5px;background:var(--danger);color:#fff;border-radius:9px;font-size:10.5px;min-width:17px;height:17px;display:grid;place-items:center;padding:0 4px}
+.notice{border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.notice.unread{border-color:var(--water);background:color-mix(in srgb,var(--water) 8%,var(--surface))}
+.notice b{display:block;font-size:14px}
+.notice p{margin:4px 0 0;font-size:13px;white-space:pre-line}
+.notice small{color:var(--muted);font-size:11.5px}
+.switch-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.switch-row:last-child{border-bottom:0}
+.switch-row label{font-weight:600;font-size:14px}
+.switch-row .sub{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.switch-row input[type=time],.switch-row select{font:inherit;padding:6px 8px;border-radius:9px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink)}
+.switch-row input[type=checkbox]{width:22px;height:22px;accent-color:var(--olive)}
+.calx{display:flex;flex-direction:column;gap:14px}
+.calrow{border:1px solid var(--line);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.calrow .top{display:flex;align-items:center;gap:10px}
+.calrow canvas{width:40px;height:40px}
+.calrow h3{font-size:18px}
+.calrow .summary{font-size:13.5px;line-height:1.5}
+.calrow .summary b{color:var(--olive)}
+.strip{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:3px}
+.strip span{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;color:var(--muted);font-weight:600}
+.strip i{display:block;width:100%;height:30px;border-radius:7px;background:var(--surface-2);font-style:normal;font-size:12px;font-weight:800;color:#fff;display:grid;place-items:center}
+.strip i.p{background:#8CC264;color:#1F3510}.strip i.g{background:var(--leaf)}.strip i.h{background:var(--sun);color:#3A2400}
+.strip span.now{color:var(--danger)}
+.strip span.now i{outline:3px solid var(--danger);outline-offset:1px}
+.legend-big{display:flex;gap:14px;flex-wrap:wrap;font-size:13.5px}
+.legend-big i{display:inline-grid;place-items:center;width:22px;height:18px;border-radius:5px;margin-inline-end:6px;vertical-align:-3px;font-style:normal;font-size:11px;font-weight:800}
+.coach-step{font-size:12px;font-weight:700;color:var(--olive);letter-spacing:.04em;text-transform:uppercase}
+.drag-can{position:fixed;width:56px;height:56px;pointer-events:none;z-index:50;transform:translate(-50%,-80%) rotate(-25deg)}
+/* side bar: crop list scrolls, tools stay pinned at the bottom */
+.sidebar{overflow:hidden}
+.sb-crops{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding-top:4px;scrollbar-width:thin}
+.sb-tools{display:flex;flex-direction:column;gap:5px;border-top:1px solid var(--line);padding-top:6px;flex-shrink:0}
+.sb-tools .tool{padding:4px 2px}
+.sb-tools .tool svg{width:24px;height:24px}

@@ -54,6 +54,7 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(255))
     lang: Mapped[str] = mapped_column(String(5), default="en")
     device_key: Mapped[str | None] = mapped_column(String(64), unique=True, index=True, nullable=True)  # sha256 of the device key
+    prefs: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON: reminder settings
     rp: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=utcnow)
     plots: Mapped[list["Plot"]] = relationship(back_populates="user", cascade="all, delete-orphan")
@@ -141,6 +142,36 @@ class Event(Base):
     at: Mapped[dt.datetime] = mapped_column(DateTime, default=utcnow)
     data: Mapped[str] = mapped_column(Text, default="{}")
     rp: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class PushSub(Base):
+    """A browser/phone that agreed to receive notifications for this farmer."""
+    __tablename__ = "push_subs"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    endpoint: Mapped[str] = mapped_column(String(1000), unique=True)
+    p256dh: Mapped[str] = mapped_column(String(200))
+    auth: Mapped[str] = mapped_column(String(100))
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class Notice(Base):
+    """A reminder shown in the app's notification list (and pushed to phones)."""
+    __tablename__ = "notices"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    key: Mapped[str] = mapped_column(String(120), index=True)  # e.g. "today:2026-11-14" so each is sent once
+    kind: Mapped[str] = mapped_column(String(20))
+    title: Mapped[str] = mapped_column(Text)
+    body: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime, default=utcnow)
+    read: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class AppSetting(Base):
+    __tablename__ = "app_settings"
+    key: Mapped[str] = mapped_column(String(60), primary_key=True)
+    value: Mapped[str] = mapped_column(Text)
 
 
 class Cache(Base):

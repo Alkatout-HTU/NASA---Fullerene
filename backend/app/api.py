@@ -4,18 +4,18 @@ from __future__ import annotations
 import datetime as dt
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from . import services
+from . import reminders, services
 from .agro import geo, matching
 from .agro import soil as soilmod
 from .agro.crops import CROPS
 from .auth import current_user
 from .config import settings
-from .db import Event, Planting, Plot, Tile, User, get_db, jdump, jload
-from .schemas import (AlertAction, Evaluate, FarmInputs, GridPreview, Plant, PlotCreate, PlotUpdate, Prefs,
-                      Regrid, SprayBook, TileAction)
+from .db import Event, Notice, Planting, Plot, PushSub, Tile, User, get_db, jdump, jload
+from .schemas import (AlertAction, Evaluate, FarmFile, FarmInputs, GridPreview, Irrigate, Plant, PlotCreate, PlotUpdate,
+                      Prefs, PushSubscription, Regrid, ReminderPrefs, SprayBook, TileAction, Unsubscribe)
 from .sources import geocode
 from .worker import refresh_satellite
 
@@ -231,6 +231,46 @@ async def clear(plot_id: int, body: TileAction, user: User = Depends(current_use
     return await _after(db, p, msg(f"Cleared {n} square(s)", f"تم تفريغ {n} مربع"))
 
 
+@router.post("/plots/{plot_id}/irrigate")
+async def irrigate(plot_id: int, body: Irrigate, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    """Log that the farmer watered these squares today.
+
+    Amount per square: `mm` if given, else today's planned amount, else one normal watering for the
+    crop (enough to refill the readily available water). Empty squares are skipped and reported."""
+    p = _plot(db, user, plot_id)
+    tiles = _tiles(p, body.tile_ids)
+    state = await services.plot_state(db, p)
+    by_id = {t["id"]: t for t in state["tiles"]}
+    today = dt.date.fromisoformat(state["today"])
+    done, skipped, total_m3 = [], [], 0.0
+    for t in tiles:
+        info = by_id[t.id].get("planting") or {}
+        w = info.get("water")
+        if not info:
+            skipped.append({"tile_id": t.id, "why": "empty"})
+            continue
+        if body.mm:
+            mm = body.mm
+        elif w and w.get("water_today"):
+            mm = w["today_mm"] or w["events"][0]["mm"]
+        elif w:
+            # not due today: record a normal watering for this crop (what one watering usually refills)
+            mm = max(w["depletion_mm"], w["raw_mm"], 5.0)
+        else:
+            mm = 10.0
+        mm = min(mm, 60.0)
+        m3 = mm * t.area_m2 / 1000
+        total_m3 += m3
+        done.append(t.id)
+        db.add(Event(plot_id=p.id, tile_id=t.id, kind="irrigate", on_date=today,
+                     data=jdump({"mm": round(mm, 1), "m3": round(m3, 2), "crop": info.get("crop")})))
+    if not done:
+        raise HTTPException(409, "Nothing is planted on those squares.")
+    return await _after(db, p, msg(f"Watering logged: {len(done)} square(s), {total_m3:,.1f} m³",
+                                   f"تم تسجيل الري: {len(done)} مربع، {total_m3:,.1f} م³"),
+                        {"watered": done, "skipped": skipped})
+
+
 @router.post("/plots/{plot_id}/harvest")
 async def harvest(plot_id: int, body: TileAction, user: User = Depends(current_user), db: Session = Depends(get_db)):
     """Harvest the squares that are ready. Squares that are not ready are reported, not harvested."""
@@ -332,3 +372,96 @@ async def satellite_refresh(plot_id: int, user: User = Depends(current_user), db
     await refresh_satellite(p.id, force=True)
     db.refresh(p)
     return {"status": p.appeears_status, "error": p.appeears_error}
+
+
+# ------------------------------------------------------------------ reminders
+def _notices_out(db: Session, user: User) -> list[dict]:
+    rows = db.scalars(select(Notice).where(Notice.user_id == user.id).order_by(Notice.created_at.desc()).limit(40))
+    return [{"id": n.id, "kind": n.kind, "title": n.title, "body": n.body, "read": n.read,
+             "at": n.created_at.isoformat() + "Z"} for n in rows]
+
+
+@router.get("/notify")
+def notify_info(user: User = Depends(current_user), db: Session = Depends(get_db)):
+    notices = _notices_out(db, user)
+    subs = db.scalar(select(func.count(PushSub.id)).where(PushSub.user_id == user.id))
+    return {"public_key": reminders.public_key(), "prefs": reminders.prefs_of(user), "subscriptions": subs,
+            "notices": notices, "unread": sum(1 for n in notices if not n["read"])}
+
+
+@router.put("/notify/prefs")
+def notify_prefs(body: ReminderPrefs, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    prefs = reminders.prefs_of(user)
+    prefs.update(body.model_dump(exclude_none=True))
+    user.prefs = jdump(prefs)
+    db.commit()
+    return prefs
+
+
+@router.post("/notify/subscribe")
+def notify_subscribe(body: PushSubscription, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    row = db.scalar(select(PushSub).where(PushSub.endpoint == body.endpoint))
+    if row is None:
+        db.add(PushSub(user_id=user.id, endpoint=body.endpoint, p256dh=body.keys.p256dh, auth=body.keys.auth))
+    else:
+        row.user_id, row.p256dh, row.auth = user.id, body.keys.p256dh, body.keys.auth
+    db.commit()
+    return {"ok": True}
+
+
+@router.post("/notify/unsubscribe")
+def notify_unsubscribe(body: Unsubscribe, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    db.execute(PushSub.__table__.delete().where(PushSub.endpoint == body.endpoint, PushSub.user_id == user.id))
+    db.commit()
+    return {"ok": True}
+
+
+@router.post("/notify/read")
+def notify_read(user: User = Depends(current_user), db: Session = Depends(get_db)):
+    db.execute(Notice.__table__.update().where(Notice.user_id == user.id).values(read=True))
+    db.commit()
+    return {"ok": True}
+
+
+@router.post("/notify/test")
+async def notify_test(user: User = Depends(current_user), db: Session = Depends(get_db)):
+    """Send today's reminder now (or say there is nothing to water), to check notifications work."""
+    pr = reminders.prefs_of(user)
+    today = (dt.datetime.now(dt.UTC).replace(tzinfo=None) + dt.timedelta(minutes=int(pr["tz_offset_min"]))).date()
+    made = await reminders.make_notices(user.id, "today", today, force=True)
+    if not made:
+        ar = user.lang == "ar"
+        title = "فارم ستوديو: تذكير تجريبي" if ar else "Farm Studio: test reminder"
+        body = "لا يوجد ري مطلوب اليوم. التذكيرات تعمل." if ar else "Nothing to water today. Reminders are working."
+        db.add(Notice(user_id=user.id, key=f"test:{dt.datetime.now(dt.UTC).replace(tzinfo=None).isoformat()}", kind="test", title=title, body=body))
+        db.commit()
+        sent = await reminders.push_to_user(user.id, title, body)
+    else:
+        sent = db.scalar(select(func.count(PushSub.id)).where(PushSub.user_id == user.id))
+    return {"created": max(1, len(made)), "pushed_to": sent}
+
+
+# ------------------------------------------------------------------ demo farm, export / import
+@router.post("/demo")
+async def demo(user: User = Depends(current_user), db: Session = Depends(get_db)):
+    """Create (once) a demo farm in the North Ghor with crops at different stages. Live data only:
+    only the field, crops and planting dates are preset."""
+    existing = next((p for p in user.plots if p.name.startswith(services.DEMO_NAME)), None)
+    if existing is None:
+        existing = await services.create_demo(db, user.id)
+        await refresh_satellite(existing.id)
+        db.refresh(existing)
+    return await services.plot_state(db, existing)
+
+
+@router.get("/plots/{plot_id}/export")
+def export_plot(plot_id: int, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    return services.export_plot(db, _plot(db, user, plot_id))
+
+
+@router.post("/plots/import")
+async def import_plot(body: FarmFile, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    p = await services.import_plot(db, user.id, body.model_dump())
+    await refresh_satellite(p.id)
+    db.refresh(p)
+    return await services.plot_state(db, p)
