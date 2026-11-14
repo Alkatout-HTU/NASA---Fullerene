@@ -7,6 +7,37 @@ const T = {
 appName:["Farm Studio","فارم ستوديو"],
 tagline:["Plan water, spraying, frost defence and harvest from NASA Earth data, played like a farm game.","خطّط للري ورش المبيدات والحماية من الصقيع والحصاد اعتمادًا على بيانات ناسا لرصد الأرض، بأسلوب لعبة مزرعة."],
 langBtn:["عربي","English"],
+demoBtn:["Open the demo farm","افتح المزرعة التجريبية"],demoLoading:["Building the demo farm from live NASA data…","نبني المزرعة التجريبية من بيانات ناسا الحية…"],
+noFarmsForKey:["No farms were found for that key on this server. A farm key only works on the same Farm Studio server (the same computer or the same web address). To move a farm to another computer, use More → Export this farm, then Import a farm file there.","لم نجد مزارع لهذا المفتاح على هذا الخادم. مفتاح المزرعة يعمل فقط على نفس خادم فارم ستوديو (نفس الحاسوب أو نفس عنوان الموقع). لنقل مزرعة إلى حاسوب آخر استخدم المزيد ← تصدير هذه المزرعة، ثم استيراد ملف مزرعة هناك."],
+exportFarm:["Export this farm (file)","تصدير هذه المزرعة (ملف)"],importFarm:["Import a farm file","استيراد ملف مزرعة"],importing:["Importing the farm…","نستورد المزرعة…"],
+exported:["Farm file saved","تم حفظ ملف المزرعة"],badFile:["That file is not a Farm Studio farm file.","هذا الملف ليس ملف مزرعة من فارم ستوديو."],
+moveFarms:["Move a farm to another computer","نقل مزرعة إلى حاسوب آخر"],moveFarmsHelp:["The farm key opens your farms on any phone that uses this same server. To copy a farm to a different computer or server, export it here and import the file there.","مفتاح المزرعة يفتح مزارعك على أي هاتف يستخدم نفس هذا الخادم. لنسخ مزرعة إلى حاسوب أو خادم آخر صدّرها هنا واستورد الملف هناك."],
+waterDragHint:["Drag the watering can over the squares you watered","اسحب المرشّة فوق المربعات التي سقيتها"],
+wateredN:["Watering logged: {n} square(s)","تم تسجيل الري: {n} مربع"],holdWatered:["Watered ✓","تم الري ✓"],
+lastWatered:["Last watered","آخر ري"],wateredToday:["Watered today","سُقي اليوم"],
+remTitle:["Reminders","التذكيرات"],remNone:["No reminders yet. They appear here on watering days.","لا توجد تذكيرات بعد. تظهر هنا في أيام الري."],
+remSettings:["Reminder settings","إعدادات التذكير"],remTest:["Send a test reminder","أرسل تذكيرًا تجريبيًا"],
+remOn:["Reminders on","التذكيرات مفعّلة"],remSameDay:["On the watering day","في يوم الري"],remDayBefore:["The day before","قبل يوم"],
+remWeekly:["Weekly plan for each crop","خطة أسبوعية لكل محصول"],remAt:["at","الساعة"],remEvery:["every","كل"],
+remDevice:["Notifications on this phone","الإشعارات على هذا الهاتف"],remDeviceOn:["Turn on","تفعيل"],remDeviceOff:["Turn off","إيقاف"],
+remDeviceActive:["This phone receives reminders, even when the app is closed.","هذا الهاتف يستقبل التذكيرات حتى عند إغلاق التطبيق."],
+remDeviceInactive:["Reminders show in the app. Turn on notifications to get them on this phone too.","تظهر التذكيرات داخل التطبيق. فعّل الإشعارات لتصلك على هذا الهاتف أيضًا."],
+remUnsupported:["This browser cannot receive notifications here. They need the app opened over HTTPS (or on localhost); on iPhone, first add the app to the Home Screen. Reminders still appear in the app.","هذا المتصفح لا يستطيع استقبال الإشعارات هنا. تحتاج فتح التطبيق عبر HTTPS (أو localhost)؛ على آيفون أضف التطبيق إلى الشاشة الرئيسية أولًا. تبقى التذكيرات ظاهرة داخل التطبيق."],
+remDenied:["Notifications are blocked for this site. Allow them in the browser settings.","الإشعارات محظورة لهذا الموقع. اسمح بها من إعدادات المتصفح."],
+remSaved:["Reminder settings saved","تم حفظ إعدادات التذكير"],remSent:["Test reminder sent","تم إرسال تذكير تجريبي"],
+weekdays:[["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],["الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت","الأحد"]],
+monthsLong:[["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],["كانون الثاني","شباط","آذار","نيسان","أيار","حزيران","تموز","آب","أيلول","تشرين الأول","تشرين الثاني","كانون الأول"]],
+calPlant:["Plant","ازرع"],calHarvest:["Harvest","احصد"],calGrowing:["Growing","ينمو"],calNoWindow:["No good planting month in this climate.","لا يوجد شهر مناسب للزراعة في هذا المناخ."],
+calHelp:["Each row is one crop. Green shows the growing season, light green the best month to plant and gold the harvest. The red outline is this month.","كل صف محصول واحد. الأخضر موسم النمو، والأخضر الفاتح أفضل شهر للزراعة، والذهبي الحصاد. الإطار الأحمر هو الشهر الحالي."],
+stepOf2:["Step {i} of {n}","الخطوة {i} من {n}"],
+t_water:["Watering","الري"],t_waterB:["Tap the watering can for this week's plan. After you water, drag the can over those squares, or press and hold a square with a drop.","اضغط المرشّة لخطة هذا الأسبوع. بعد الري اسحب المرشّة فوق المربعات، أو اضغط مطولًا على مربع عليه قطرة."],
+t_topo:["Terrain","التضاريس"],t_topoB:["Shows the lowest squares in blue. Cold air and water collect there, so frost hits them first.","يُظهر المربعات الأخفض بالأزرق. يتجمع فيها الهواء البارد والماء، لذا يصلها الصقيع أولًا."],
+t_add:["Add a crop","إضافة محصول"],t_addB:["Write any crop in Arabic or English. The app tells you if it suits this field.","اكتب أي محصول بالعربية أو الإنجليزية. يخبرك التطبيق إن كان يناسب هذه الأرض."],
+t_bell:["Reminders","التذكيرات"],t_bellB:["Watering reminders arrive here: on the day, the day before, and a weekly plan for each crop. You choose the times or switch them off.","تصل هنا تذكيرات الري: في اليوم نفسه، وقبل يوم، وخطة أسبوعية لكل محصول. تختار الأوقات أو توقفها."],
+t_plan:["Plan","الخطة"],t_planB:["The crop calendar, this week's watering plan and the water you have, your crop mix, and the climate trend from NASA POWER.","تقويم المحاصيل، وخطة الري لهذا الأسبوع والمياه المتاحة، وتنوع محاصيلك، واتجاه المناخ من NASA POWER."],
+t_spray:["Spray","الرش"],t_sprayB:["Green, yellow and red times for the next 3 days. Red slots are locked because wind or rain would waste the spray.","أوقات خضراء وصفراء وحمراء للأيام الثلاثة القادمة. الخانات الحمراء مقفلة لأن الرياح أو المطر سيهدر الرش."],
+t_risks:["Risks","المخاطر"],t_risksB:["Frost, heat, heavy rain and wind warnings for 7 days, with steps to tick off in the field.","تحذيرات الصقيع والحر والأمطار الغزيرة والرياح لـ 7 أيام، مع خطوات تعلّمها عند تنفيذها."],
+t_more:["More","المزيد"],t_moreB:["Language, square size, your farms, the farm key, export and import, data sources and how the app works.","اللغة، وحجم المربع، ومزارعك، ومفتاح المزرعة، والتصدير والاستيراد، ومصادر البيانات وكيف يعمل التطبيق."],
 startBtn:["Add my field","أضف أرضي"],noAccount:["No account needed. Your farms are saved for this phone or browser.","لا حاجة لحساب. تُحفظ مزارعك لهذا الهاتف أو المتصفح."],
 haveKey:["Have a farm key from another device?","لديك مفتاح مزرعة من جهاز آخر؟"],keyPh:["Paste your farm key","الصق مفتاح المزرعة"],open:["Open","فتح"],
 badKey:["That key is too short. Copy the whole key from More → Your farm key.","المفتاح قصير جدًا. انسخ المفتاح كاملًا من المزيد ← مفتاح مزرعتك."],
@@ -19,7 +50,7 @@ weeklyWater:["Water you have per week","المياه المتاحة أسبوعي
 wpTitle:["Watering plan · next 7 days","خطة الري · الأيام السبعة القادمة"],
 wpEnough:["Your {a} m³ is enough. The crops need {n} m³ this week, so {s} m³ is left over.","الـ {a} م³ تكفي. تحتاج المحاصيل {n} م³ هذا الأسبوع، ويتبقى {s} م³."],
 wpShort:["Your {a} m³ covers {p}% of the {n} m³ the crops need. Every crop gets {p}% of its water; expect some stress, so water at dawn and mulch.","الـ {a} م³ تغطي {p}% من {n} م³ تحتاجها المحاصيل. كل محصول يحصل على {p}% من حاجته؛ توقّع بعض الإجهاد، فاسقِ فجرًا واستخدم التغطية."],
-wpEstimate:["The weather forecast is not available right now, so this week's plan uses NASA POWER observations and long-term averages. Check again later.","توقعات الطقس غير متاحة الآن، لذلك تعتمد خطة هذا الأسبوع على مشاهدات NASA POWER والمعدلات طويلة المدى. تحقّق لاحقًا."],
+wpEstimate:["The weather forecast is not available right now, so this week's plan uses NASA POWER observations and long-term average temperatures, assuming no rain. Check again later.","توقعات الطقس غير متاحة الآن، لذلك تعتمد خطة هذا الأسبوع على مشاهدات NASA POWER ومعدلات الحرارة طويلة المدى، بافتراض عدم هطول مطر. تحقّق لاحقًا."],
 wpNone:["Enter how much water you have each week to get a plan.","أدخل كمية المياه المتاحة كل أسبوع للحصول على خطة."],
 wpRainfed:["This is a rain-fed field: the plan shows how much water the crops use, but no watering dates.","هذه أرض بعلية: تعرض الخطة استهلاك المحاصيل للمياه دون مواعيد ري."],
 wpNoCrops:["Plant a crop to get a watering plan.","ازرع محصولًا للحصول على خطة ري."],
@@ -138,7 +169,7 @@ evKind:{plant:["Planted","زراعة"],irrigate:["Watered","ري"],wait_rain:["W
 c1t:["Your crops","محاصيلك"],c1b:["Tap a crop. The best squares for it light up green, from soil, terrain and climate.","اضغط على محصول. تضيء أفضل المربعات له بالأخضر، حسب التربة والتضاريس والمناخ."],
 c2t:["Your field","أرضك"],c2b:["This is the real shape of your field, split into squares (size at the top). A drop means today is a watering day in your weekly plan. Pinch or scroll to zoom, drag to move.","هذا هو الشكل الحقيقي لأرضك مقسّمًا إلى مربعات (الحجم في الأعلى). القطرة تعني أن اليوم يوم ري في خطتك الأسبوعية. قرّب بإصبعين أو بالعجلة، واسحب للتحريك."],
 c3t:["The sickle","المنجل"],c3b:["Drag it over golden squares: every square it touches is harvested. Tap it to see harvest dates.","اسحبه فوق المربعات الذهبية: كل مربع يلمسه يُحصد. اضغطه لرؤية مواعيد الحصاد."],
-c4t:["Risks","المخاطر"],c4b:["Frost, heavy rain, heat and wind warnings, with what to do in the field.","تحذيرات الصقيع والأمطار والحر والرياح، مع ما يجب فعله في الحقل."],
+
 skip:["Skip","تخطي"],gotIt:["Start farming","ابدأ الزراعة"],
 netErr:["Can't reach the server. Check your connection and try again.","تعذّر الوصول إلى الخادم. تحقق من الاتصال وحاول مجددًا."],
 months:[["J","F","M","A","M","J","J","A","S","O","N","D"],["ك٢","ش","آذ","ني","أي","حز","تم","آب","أي","ت١","ت٢","ك١"]],
@@ -294,7 +325,7 @@ function zoomAt(f, sx, sy) { const ns = Math.max(.15, Math.min(4, cam.s * f)); c
 function pickTile(sx, sy) { const st = P(); if (!st) return null; const [gx, gy] = screenToGrid(sx, sy); const c = Math.floor(gx), r = Math.floor(gy); return st.tiles.find(x => x.c === c && x.r === r) || null; }
 const stageOf = tl => tl.planting ? tl.planting.stage : -1;
 const ready = tl => !!(tl.planting && tl.planting.ready);
-const thirsty = tl => !!tl.planting?.water?.water_today;
+const thirsty = tl => !!(tl.planting?.water?.water_today && !tl.planting.water.watered_today);
 const waiting = tl => !!(tl.planting?.water?.rain_postponed && !tl.planting.water.water_today);
 function rnd(seed) { let s = seed % 2147483647; if (s <= 0) s += 2147483646; return () => (s = s * 16807 % 2147483647) / 2147483647; }
 function inOutline(gx, gy, poly) { let ins = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const [xi, yi] = poly[i], [xj, yj] = poly[j]; if ((yi > gy) !== (yj > gy) && gx < (xj - xi) * (gy - yi) / ((yj - yi) || 1e-9) + xi) ins = !ins; } return ins; }
@@ -304,12 +335,16 @@ function buildDecor() {
   const gr = grid(), key = P().plot.id + ":" + gr.cols + "x" + gr.rows; if (decorKey === key) return; decorKey = key;
   const R = rnd(P().plot.id * 977 + 13), out = { trees: [], tufts: [] };
   const pad = 3, minX = -pad, maxX = gr.cols + pad, minY = -pad, maxY = gr.rows + pad;
-  const nearField = (x, y) => { for (const [dx, dy] of [[0, 0], [.7, 0], [-.7, 0], [0, .7], [0, -.7]]) if (inOutline(x + dx, y + dy, gr.outline)) return true; return false; };
-  for (let i = 0; i < 30; i++) { const gx = minX + R() * (maxX - minX), gy = minY + R() * (maxY - minY); if (nearField(gx, gy)) continue; out.trees.push({ gx, gy, s: .8 + R() * .5, kind: R() < .25 ? "pine" : "round" }); }
-  for (let i = 0; i < 180; i++) out.tufts.push({ gx: minX - 3 + R() * (maxX - minX + 6), gy: minY - 3 + R() * (maxY - minY + 6), c: R() });
-  out.barn = { gx: -1.6, gy: -1.6 }; out.pond = { gx: -2.4, gy: gr.rows * .6 + .5 };
-  for (const o of [out.barn, out.pond]) { let n = 0; while (nearField(o.gx, o.gy) && n++ < 20) { o.gx -= .5; o.gy -= .3; } }
-  out.trees = out.trees.filter(tr => Math.hypot(tr.gx - out.barn.gx, tr.gy - out.barn.gy) > 1.8 && Math.hypot(tr.gx - out.pond.gx, tr.gy - out.pond.gy) > 1.6);
+  const span = Math.max(gr.cols, gr.rows), clear = Math.max(2.2, span * .12); // keep trees well away from the fence
+  const segDist = (px, py, ax, ay, bx, by) => { const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy || 1e-9; const t2 = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / l2)); return Math.hypot(px - ax - t2 * dx, py - ay - t2 * dy); };
+  const fieldDist = (x, y) => { if (inOutline(x, y, gr.outline)) return 0; let d = Infinity; const o = gr.outline; for (let i = 0; i < o.length; i++) { const a2 = o[i], b2 = o[(i + 1) % o.length]; d = Math.min(d, segDist(x, y, a2[0], a2[1], b2[0], b2[1])); } return d; };
+  const nearField = (x, y, c2 = clear) => fieldDist(x, y) < c2;
+  const pad2 = clear + span * .35 + 2, mnX = -pad2, mxX = gr.cols + pad2, mnY = -pad2, mxY = gr.rows + pad2;
+  for (let i = 0; i < 60 && out.trees.length < 26; i++) { const gx = mnX + R() * (mxX - mnX), gy = mnY + R() * (mxY - mnY); if (nearField(gx, gy)) continue; out.trees.push({ gx, gy, s: .8 + R() * .5, kind: R() < .25 ? "pine" : "round" }); }
+  for (let i = 0; i < 180; i++) out.tufts.push({ gx: mnX - 3 + R() * (mxX - mnX + 6), gy: mnY - 3 + R() * (mxY - mnY + 6), c: R() });
+  out.barn = { gx: -clear - .6, gy: -clear - .6 }; out.pond = { gx: -clear - 1.4, gy: gr.rows * .6 + .5 };
+  for (const o of [out.barn, out.pond]) { let n = 0; while (nearField(o.gx, o.gy, clear + .3) && n++ < 40) { o.gx -= .5; o.gy -= .3; } }
+  out.trees = out.trees.filter(tr => Math.hypot(tr.gx - out.barn.gx, tr.gy - out.barn.gy) > 2 && Math.hypot(tr.gx - out.pond.gx, tr.gy - out.pond.gy) > 1.8);
   decor = out;
 }
 function polyPath(pts) { g.beginPath(); pts.forEach((p, i) => { const x = isoX(p[0], p[1]), y = isoY(p[0], p[1]); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.closePath(); }
@@ -403,7 +438,7 @@ function drawFarm(now) {
     if (S.sel && !tl.planting) { const s = tl.suitability?.[S.sel] ?? 0; if (s >= 75) overlay = `rgba(90,210,80,${.45 + .15 * Math.sin(now / 250)})`; else if (s >= 55) overlay = "rgba(240,200,60,.45)"; }
     if (overlay) { bedPath(tl, 0); g.fillStyle = overlay; g.fill(); }
     if (ready(tl) && !overlay) { bedPath(tl, 0); g.fillStyle = `rgba(250,200,70,${.22 + .1 * Math.sin(now / 300)})`; g.fill(); }
-    if (sickle.active && sickle.hover === tl.id) { bedPath(tl, 0); g.strokeStyle = "#fff"; g.lineWidth = 3; g.stroke(); }
+    if ((sickle.active && sickle.hover === tl.id) || (can.active && can.hover === tl.id)) { bedPath(tl, 0); g.strokeStyle = "#fff"; g.lineWidth = 3; g.stroke(); }
   });
   g.restore();
   const items = fenceItems(poly);
@@ -477,15 +512,36 @@ function show(id) { ["auth", "onboard", "main"].forEach(k => $("#scr-" + k).hidd
 /* ---- start ---- */
 async function afterStart() {
   S.plots = await api("/plots");
-  if (!S.plots.length) { show("auth"); return; }
+  const switched = store.get("fs_keyswitch"); store.set("fs_keyswitch", null);
+  if (!S.plots.length) { show("auth"); if (switched) sheet(`<div class="stack"><div class="note"><span>${t("noFarmsForKey")}</span></div><button class="btn ghost block" data-act="closeSheet">${t("close")}</button></div>`); return; }
   const last = +store.get("fs_plot"); S.plotId = S.plots.some(p => p.id === last) ? last : S.plots[0].id;
   await enterMain();
 }
 function useKey(k) {
   k = (k || "").trim(); if (k.length < 24) { toast(t("badKey")); return; }
-  FARM_KEY = k; store.set("fs_key", k); store.set("fs_plot", null); location.reload();
+  FARM_KEY = k; store.set("fs_key", k); store.set("fs_plot", null); store.set("fs_keyswitch", "1"); location.reload();
 }
 $("#keyForm").addEventListener("submit", e => { e.preventDefault(); useKey($("#keyIn").value); });
+async function openDemo() {
+  const b = $("#scr-main").hidden ? $("#demoBtn") : ($("#demoBtn2") || $("#demoBtn")); b.disabled = true; b.textContent = t("demoLoading");
+  try { const st = await api("/demo", { method: "POST" }); S.plots = await api("/plots"); S.plotId = st.plot.id; S.state = st; store.set("fs_plot", S.plotId); cam.fitted = false; store.set("fs_tut", null); await enterMain(true); }
+  catch (e) { toast(e.message); } finally { b.disabled = false; b.textContent = t("demoBtn"); }
+}
+async function exportFarm() {
+  const data = await api(`/plots/${S.plotId}/export`);
+  const blob = new Blob([JSON.stringify(data, null, 1)], { type: "application/json" });
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+  a.download = `farm-${(data.name || "farm").replace(/[^\w\u0600-\u06FF-]+/g, "-").slice(0, 40)}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); toast(t("exported"));
+}
+$("#importFile").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  let data; try { data = JSON.parse(await f.text()); } catch { toast(t("badFile")); return; }
+  if (data?.format !== "farmstudio-farm-1") { toast(t("badFile")); return; }
+  toast(t("importing")); if (!$("#scr-main").hidden) busy(true);
+  try { const st = await api("/plots/import", { method: "POST", body: data }); S.plots = await api("/plots"); S.plotId = st.plot.id; store.set("fs_plot", S.plotId); cam.fitted = false; await enterMain(); }
+  catch (ex) { toast(ex.message); } finally { busy(false); }
+});
 
 /* ---- onboarding: map ---- */
 const REGIONS = [
@@ -673,7 +729,7 @@ async function loadPlot(refit) {
 }
 async function enterMain(tutorial) {
   show("main"); switchTab("farm"); applyI18n();
-  await guard(() => loadPlot(true));
+  await guard(() => loadPlot(true)); loadNotify();
   if ((tutorial || !store.get("fs_tut")) && S.state) setTimeout(() => coach(0), 400);
 }
 function applyState(res, quiet) { if (res.state) { S.state = res.state; renderHUD(); renderSidebar(); refreshHint(); } if (res.message && !quiet) toast(tx(res.message)); }
@@ -692,7 +748,10 @@ function renderHUD() {
     bn.innerHTML = `<span class="sev" style="background:${col}"></span><div style="min-width:0"><b>${esc(tx(a.title))} · ${fmtDate(a.date)}</b><small>${esc(a.source)}</small></div><button class="btn sm" data-act="goAlerts">${t("seeWhat")}</button>`; }
 }
 function renderSidebar() {
-  const st = P(), sb = $("#sidebar"); if (!st) return; sb.innerHTML = "";
+  const st = P(), side = $("#sidebar"); if (!st) return;
+  const keep = side.querySelector(".sb-crops")?.scrollTop || 0;
+  side.innerHTML = `<div class="sb-crops"></div><div class="sb-tools"></div>`;
+  const sb = side.querySelector(".sb-crops"), tools = side.querySelector(".sb-tools");
   st.plot.crops.forEach(id => {
     const ts = st.tiles.filter(x => x.planting?.crop === id), nw = ts.filter(thirsty).length, nr = ts.filter(ready).length;
     let s = t("tapToPlant"); if (nr) s = t("readyN"); else if (nw) s = t("needsWater"); else if (ts.length) { const d = ts.map(x => x.planting.harvest_from).filter(Boolean).sort()[0]; s = d ? t("harvestOn", { d: fmtDate(d) }) : ""; }
@@ -700,14 +759,15 @@ function renderSidebar() {
     b.innerHTML = `<canvas></canvas><b>${esc(cName(id))}</b><small>${esc(s)}</small>${nw ? `<span class="badge w">${nw}</span>` : nr ? `<span class="badge h">${nr}</span>` : ""}`;
     sb.appendChild(b); cropIcon(b.querySelector("canvas"), id);
   });
-  sb.insertAdjacentHTML("beforeend", `<button class="sb-add" data-act="addCropSheet">${t("addCrop")}</button><div class="sb-sep"></div>
-   <button class="tool" id="toolSickle" data-tool="sickle" aria-pressed="${sickle.active}">${sickleSVG()}${t("sickle")}</button>
-   <button class="tool" data-tool="water"><svg viewBox="0 0 32 32"><path d="M6 13h14l-2 12H8Z" fill="${css("--water")}"/><path d="M20 16l8-6" stroke="${css("--water")}" stroke-width="3" stroke-linecap="round"/><path d="M9 13a4 4 0 0 1 8 0" fill="none" stroke="${css("--water")}" stroke-width="2.4"/></svg>${t("water")}</button>
+  sb.insertAdjacentHTML("beforeend", `<button class="sb-add" data-act="addCropSheet">${t("addCrop")}</button>`);
+  sb.scrollTop = keep;
+  tools.insertAdjacentHTML("beforeend", `<button class="tool" id="toolSickle" data-tool="sickle" aria-pressed="${sickle.active}">${sickleSVG()}${t("sickle")}</button>
+   <button class="tool" id="toolWater" data-tool="water"><svg viewBox="0 0 32 32"><path d="M6 13h14l-2 12H8Z" fill="${css("--water")}"/><path d="M20 16l8-6" stroke="${css("--water")}" stroke-width="3" stroke-linecap="round"/><path d="M9 13a4 4 0 0 1 8 0" fill="none" stroke="${css("--water")}" stroke-width="2.4"/></svg>${t("water")}</button>
    <button class="tool" data-tool="topo" aria-pressed="${S.topo}"><svg viewBox="0 0 32 32" fill="none" stroke="${css("--olive")}" stroke-width="2.2" stroke-linejoin="round"><path d="M3 24l8-12 6 8 4-5 8 9Z"/><path d="M3 28h26" stroke="${css("--water")}"/></svg>${t("topo")}</button>`);
 }
 const sickleSVG = () => `<svg viewBox="0 0 32 32"><path d="M8 26l6-7" stroke="#7A5131" stroke-width="4" stroke-linecap="round"/><path d="M13 20C10 10 18 3 27 6c-6 0-11 5-10 13Z" fill="#C9D2D8" stroke="#6D777E" stroke-width="1.2"/></svg>`;
 function setHint(s) { const h = $("#hint"); h.hidden = !s; if (s) h.textContent = s; }
-function refreshHint() { if (S.sel) setHint(t("pickSpot", { c: cName(S.sel) })); else if (sickle.active) setHint(t("dragHint")); else if (S.topo) setHint(t("topoHint")); else setHint(""); }
+function refreshHint() { if (S.sel) setHint(t("pickSpot", { c: cName(S.sel) })); else if (sickle.active) setHint(t("dragHint")); else if (can.active) setHint(t("waterDragHint")); else if (S.topo) setHint(t("topoHint")); else setHint(""); }
 function switchTab(tab) {
   S.tab = tab; $$(".tab").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === tab));
   ["farm", "plan", "spray", "alerts", "more"].forEach(k => $("#tab-" + k).hidden = k !== tab);
@@ -783,7 +843,7 @@ function infoSheet(tl) {
   const w = p.water;
   sheet(`<div class="stack"><div class="row"><canvas data-icon="${p.crop}" data-st="${p.stage}" style="width:56px;height:56px"></canvas><div><h2 style="font-size:22px">${esc(cName(p.crop))}</h2><span class="muted">${tileLabel(tl)} · ${fmtDate(p.planted_on)}</span></div></div>
     <div class="kv">${kv(t("stage"), p.ready ? t("readyNow") : p.harvested_this_season ? t("harvestedSeason") : `${p.stage + 1}/4`)}${kv(t("harvestDates"), p.harvest_from ? `${fmtDate(p.harvest_from)} – ${fmtDate(p.harvest_to)}` : "–")}
-    ${w ? kv(t("soilWater"), w.dormant ? t("dormant") : `${w.available_pct}%`) + kv(t("nextWater"), w.dormant ? "–" : w.events.length ? `${esc(weekDay(w.events[0].date))} · ${fmtNum(w.events[0].mm)} mm (${fmtNum(w.events[0].m3, 1)} m³)` : t("wpNoDates")) + kv(t("thisWeek"), `${fmtNum(w.events.reduce((s2, e) => s2 + e.m3, 0), 1)} m³`) : ""}
+    ${w ? kv(t("soilWater"), w.dormant ? t("dormant") : `${w.available_pct}%`) + kv(t("nextWater"), w.dormant ? "–" : w.events.length ? `${esc(weekDay(w.events[0].date))} · ${fmtNum(w.events[0].mm)} mm (${fmtNum(w.events[0].m3, 1)} m³)` : t("wpNoDates")) + kv(t("thisWeek"), `${fmtNum(w.events.reduce((s2, e) => s2 + e.m3, 0), 1)} m³`) + kv(t("lastWatered"), w.watered_today ? t("wateredToday") : w.last_watered ? fmtDate(w.last_watered) : "–") : ""}
     ${terrain}</div><span class="tag">${esc(p.method)} · FAO-56</span>
     ${w && w.water_today ? `<div class="note info"><span>${t("waterTodaySq", { mm: fmtNum(w.today_mm), m: fmtNum(w.events[0].m3, 1) })}</span></div>` : ""}
     ${w ? `<button class="btn water block" data-act="waterPlan">${t("openPlan")}</button>` : ""}
@@ -804,17 +864,38 @@ function addCropSheet() {
 /* farm canvas gestures: tap, drag to pan, pinch / wheel to zoom */
 const ptrs = new Map(); let gest = null;
 cv.addEventListener("pointerdown", e => { cv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  if (ptrs.size === 1) gest = { mode: "tap", x0: e.clientX, y0: e.clientY, cx: cam.x, cy: cam.y };
+  if (ptrs.size === 1) { gest = { mode: "tap", x0: e.clientX, y0: e.clientY, cx: cam.x, cy: cam.y };
+    const g0 = gest; gest.lp = setTimeout(() => { if (gest === g0 && g0.mode === "tap") { g0.mode = "long"; const r = cv.getBoundingClientRect(); const tl = pickTile(g0.x0 - r.left, g0.y0 - r.top); if (tl) onLongPress(tl); } }, 550); }
   else if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; gest = { mode: "pinch", d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, s0: cam.s, cx: cam.x, cy: cam.y, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2 }; } });
 cv.addEventListener("pointermove", e => { if (!ptrs.has(e.pointerId) || !gest) return; ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
   const r = cv.getBoundingClientRect();
   if (gest.mode === "pinch") { if (ptrs.size === 2) { const [a, b] = [...ptrs.values()], d = Math.hypot(a.x - b.x, a.y - b.y); cam.x = gest.cx; cam.y = gest.cy; cam.s = gest.s0; zoomAt(d / gest.d0, gest.mx - r.left, gest.my - r.top); } return; }
   if (Math.hypot(e.clientX - gest.x0, e.clientY - gest.y0) > 8) { gest.mode = "pan"; cam.x = gest.cx + e.clientX - gest.x0; cam.y = gest.cy + e.clientY - gest.y0; } });
-function endPtr(e) { if (!ptrs.has(e.pointerId)) return; ptrs.delete(e.pointerId);
+function endPtr(e) { if (!ptrs.has(e.pointerId)) return; ptrs.delete(e.pointerId); if (gest?.lp) clearTimeout(gest.lp);
   if (gest?.mode === "tap" && ptrs.size === 0) { const r = cv.getBoundingClientRect(), tl = pickTile(e.clientX - r.left, e.clientY - r.top); if (tl) onTileTap(tl); else if (S.sel) { S.sel = null; renderSidebar(); refreshHint(); } }
   if (ptrs.size === 0) gest = null; }
 cv.addEventListener("pointerup", endPtr); cv.addEventListener("pointercancel", endPtr);
 cv.addEventListener("wheel", e => { e.preventDefault(); const r = cv.getBoundingClientRect(); zoomAt(Math.exp(-e.deltaY * .0015), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
+
+function onLongPress(tl) { // press and hold a square = "I watered this square"
+  if (!tl.inside || !tl.planting) { toast(t("outside")); return; }
+  navigator.vibrate?.(15); waterLocal(tl); can.queue.push(tl.id); flushWater(); toast(t("holdWatered"));
+}
+
+/* watering can: drag it from the side bar over the squares you watered; tap it for the plan */
+const can = { active: false, pending: null, el: null, hover: null, done: new Set(), queue: [], busy: false, count: 0 };
+function waterLocal(tl) {
+  floatAt(tl.id, "💧", "#fff", "#6AB4E6");
+  if (tl.planting?.water) tl.planting = { ...tl.planting, water: { ...tl.planting.water, watered_today: true } };
+}
+async function flushWater() {
+  if (can.busy || !can.queue.length) return; can.busy = true;
+  const ids = can.queue.splice(0);
+  try { const res = await api(`/plots/${S.plotId}/irrigate`, { method: "POST", body: { tile_ids: ids } }); can.count += (res.watered || []).length; applyState(res, true); }
+  catch (e) { toast(e.message); await guard(() => loadPlot()); }
+  finally { can.busy = false; if (can.queue.length) flushWater(); else if (!can.active) renderSidebar(); }
+}
+const canSVG = () => `<svg viewBox="0 0 32 32"><path d="M6 13h14l-2 12H8Z" fill="#2F7FB5"/><path d="M20 16l8-6" stroke="#2F7FB5" stroke-width="3" stroke-linecap="round"/><path d="M9 13a4 4 0 0 1 8 0" fill="none" stroke="#2F7FB5" stroke-width="2.4"/><circle cx="29" cy="12" r="1.3" fill="#6AB4E6"/><circle cx="30" cy="15" r="1.1" fill="#6AB4E6"/></svg>`;
 
 /* sickle: drag it from the side bar; every ready square it touches is harvested at once */
 const sickle = { active: false, pending: null, el: null, hover: null, done: new Set(), warned: new Set(), queue: [], busy: false };
@@ -844,13 +925,23 @@ async function flushHarvest() {
   catch (e) { toast(e.message); await guard(() => loadPlot()); }
   finally { sickle.busy = false; if (sickle.queue.length) flushHarvest(); }
 }
-$("#app").addEventListener("pointerdown", e => { const b = e.target.closest("#toolSickle"); if (!b) return; e.preventDefault(); sickle.pending = { x: e.clientX, y: e.clientY }; });
+$("#app").addEventListener("pointerdown", e => {
+  if (e.target.closest("#toolSickle")) { e.preventDefault(); sickle.pending = { x: e.clientX, y: e.clientY }; }
+  else if (e.target.closest("#toolWater")) { e.preventDefault(); can.pending = { x: e.clientX, y: e.clientY }; } });
 addEventListener("pointermove", e => {
   if (sickle.pending && !sickle.active && Math.hypot(e.clientX - sickle.pending.x, e.clientY - sickle.pending.y) > 6) {
     sickle.active = true; sickle.done = new Set(); sickle.warned = new Set(); S.sel = null; refreshHint();
     sickle.el = document.createElement("div"); sickle.el.className = "drag-sickle"; sickle.el.innerHTML = sickleSVG(); document.body.appendChild(sickle.el); $("#toolSickle")?.setAttribute("aria-pressed", "true");
   }
   if (sickle.active) { e.preventDefault(); sickleMove(e); }
+  if (can.pending && !can.active && Math.hypot(e.clientX - can.pending.x, e.clientY - can.pending.y) > 6) {
+    can.active = true; can.done = new Set(); can.count = 0; S.sel = null; refreshHint();
+    can.el = document.createElement("div"); can.el.className = "drag-can"; can.el.innerHTML = canSVG(); document.body.appendChild(can.el); $("#toolWater")?.setAttribute("aria-pressed", "true");
+  }
+  if (can.active) { e.preventDefault(); can.el.style.left = e.clientX + "px"; can.el.style.top = e.clientY + "px";
+    const r0 = cv.getBoundingClientRect(), hit = pickTile(e.clientX - r0.left, e.clientY - r0.top + 6); // only the square under the spout
+    const tiles = hit ? [hit] : []; can.hover = hit?.id ?? null;
+    for (const tl of tiles) { if (!tl.inside || !tl.planting || can.done.has(tl.id)) continue; can.done.add(tl.id); waterLocal(tl); can.queue.push(tl.id); flushWater(); navigator.vibrate?.(8); } }
 }, { passive: false });
 addEventListener("pointerup", () => {
   if (sickle.active) {
@@ -858,9 +949,14 @@ addEventListener("pointerup", () => {
     toast(sickle.done.size ? tx({ en: `Harvested ${sickle.done.size} square(s)`, ar: `تم حصاد ${sickle.done.size} مربع` }) : t("dragHint"));
   } else if (sickle.pending) { suppressClick = true; showHarvestDates(); }
   sickle.pending = null;
+  if (can.active) {
+    can.active = false; can.el?.remove(); can.hover = null; suppressClick = true; refreshHint(); renderSidebar();
+    toast(can.done.size ? t("wateredN", { n: can.done.size }) : t("waterDragHint"));
+  } else if (can.pending) { suppressClick = true; waterPlanSheet(); }
+  can.pending = null;
 });
 let suppressClick = false;
-$("#app").addEventListener("contextmenu", e => { if (e.target.closest("#toolSickle,#farmCanvas")) e.preventDefault(); });
+$("#app").addEventListener("contextmenu", e => { if (e.target.closest("#toolSickle,#toolWater,#farmCanvas")) e.preventDefault(); });
 function showHarvestDates() {
   const groups = {}; P().tiles.filter(x => x.planting).forEach(tl => (groups[tl.planting.crop] ||= []).push(tl));
   const keys = Object.keys(groups);
@@ -872,16 +968,27 @@ function showHarvestDates() {
 
 /* ---- plan ---- */
 function bars(series, key, cls, max) { if (!series?.length) return ""; const m = max != null ? max : (Math.max(...series.map(x => x[key])) || 1); return `<div class="spark ${cls || ""}">${series.map(x => `<i title="${esc((x.year || x.date) + ": " + x[key])}" style="height:${Math.max(3, 100 * x[key] / m)}%"></i>`).join("")}</div>`; }
+function monthList(idx) { const L2 = T.monthsLong[LANG === "ar" ? 1 : 0]; return idx.map(i => L2[i]).join(LANG === "ar" ? "، " : ", "); }
+function calRow(r, mNow) {
+  const short = T.months[LANG === "ar" ? 1 : 0], C = S.crops[r.crop] || {};
+  const plant = r.row.map((k, i) => k === "p" ? i : -1).filter(i => i >= 0), harv = r.row.map((k, i) => k === "h" ? i : -1).filter(i => i >= 0);
+  const grow = r.row.map((k, i) => k ? i : -1).filter(i => i >= 0);
+  let summary;
+  if (!grow.length) summary = t("calNoWindow");
+  else summary = [plant.length ? `<b>${t("calPlant")}:</b> ${monthList(plant)}` : C.perennial ? `<b>${t("calGrowing")}:</b> ${monthList([grow[0]])} – ${monthList([grow[grow.length - 1]])}` : "",
+    harv.length ? `<b>${t("calHarvest")}:</b> ${monthList(harv)}` : ""].filter(Boolean).join(" · ");
+  return `<div class="calrow"><div class="top"><canvas data-icon="${r.crop}"></canvas><div><h3>${esc(cName(r.crop))}</h3><div class="summary">${summary}</div></div></div>
+    <div class="strip">${r.row.map((k, i) => `<span class="${i === mNow ? "now" : ""}"><i class="${k}">${k === "p" ? "P" : k === "h" ? "H" : ""}</i>${short[i]}</span>`).join("")}</div></div>`;
+}
 function renderPlan() {
   const p = S.plan, el = $("#tab-plan"), mNow = new Date().getMonth(), months = T.months[LANG === "ar" ? 1 : 0];
   el.innerHTML = `<div class="stack">
   <div class="sec-title"><h2>${t("calendar")}</h2><span class="tag">NASA POWER</span></div>
   ${p.advice.map(a => `<div class="note ${a.type === "cold" ? "info" : ""}"><span>${esc(tx(a))}</span></div>`).join("")}
   ${p.anomaly ? `<div class="muted" style="font-size:13px">${t("last30")}: <b class="mono">${p.anomaly.anomaly_c > 0 ? "+" : ""}${p.anomaly.anomaly_c} °C</b> (${fmtDate(p.anomaly.from)} – ${fmtDate(p.anomaly.to)})</div>` : ""}
-  <div class="cal"><table><thead><tr><th></th>${months.map((m, i) => `<th${i === mNow ? ' style="color:var(--danger)"' : ""}>${m}</th>`).join("")}</tr></thead><tbody>
-  ${p.calendar.map(r => `<tr><td class="name">${esc(cName(r.crop))}</td>${r.row.map((k, i) => `<td class="${k ? "seg-" + k : ""}${i === mNow ? " now" : ""}" style="${k ? "" : "background:var(--surface-2)"}"></td>`).join("")}</tr>`).join("")}
-  </tbody></table></div>
-  <div class="legend"><span><i style="background:var(--leaf);opacity:.55"></i>${t("lgPlant")}</span><span><i style="background:var(--leaf)"></i>${t("lgGrow")}</span><span><i style="background:var(--sun)"></i>${t("lgHarv")}</span><span><i style="background:var(--danger);width:3px"></i>${t("lgNow")}</span></div>
+  <p class="muted" style="margin:0;font-size:13.5px">${t("calHelp")}</p>
+  <div class="legend-big"><span><i style="background:#8CC264;color:#1F3510">P</i>${t("lgPlant")}</span><span><i style="background:var(--leaf)"></i>${t("lgGrow")}</span><span><i style="background:var(--sun);color:#3A2400">H</i>${t("lgHarv")}</span><span><i style="background:var(--surface-2);outline:3px solid var(--danger)"></i>${t("lgNow")}</span></div>
+  <div class="calx">${p.calendar.map(r => calRow(r, mNow)).join("")}</div>
   <p class="muted" style="font-size:12px;margin:0">${t("calFrom", { p: p.climatology_period || "" })}</p>
   <div class="sec-title"><h2>${t("wpTitle")}</h2><span class="tag">FAO-56 · Open-Meteo</span></div>
   ${weeklyInput()}${waterPlanHTML(p.water)}
@@ -948,6 +1055,7 @@ function renderMore() {
   <div class="sec-title"><h2>${t("myPlots")}</h2></div>
   ${S.plots.map(p => `<button class="list-item${p.id === S.plotId ? " on" : ""}" data-act="switchPlot" data-id="${p.id}"><div style="flex:1;min-width:0"><b>${esc(p.name)}</b><div class="muted" style="font-size:13px">${esc(p.region)} · ${fmtNum(p.area_m2 / 1000, 1)} ${t("dunums")}</div></div></button>`).join("")}
   <button class="btn ghost" data-act="addPlot">+ ${t("addPlot")}</button>
+  <button class="btn ghost" data-act="demo" id="demoBtn2">${t("demoBtn")}</button>
   <div class="sec-title"><h2>${t("satLayers")}</h2><span class="tag">SMAP · MODIS · ECOSTRESS</span></div>
   <div class="card stack" style="gap:8px"><div class="row between"><b>${esc(pick2(satL))}</b>${sat.updated_at ? `<span class="muted mono" style="font-size:12px">${fmtDate(sat.updated_at.slice(0, 10))}</span>` : ""}</div>
    ${sat.smap ? `<span class="muted" style="font-size:13px">SMAP ${fmtNum(sat.smap.rootzone_m3m3, 3)} m³/m³ · ${fmtDate(sat.smap.date)}</span>` : ""}
@@ -956,10 +1064,15 @@ function renderMore() {
   <div class="sec-title"><h2>${t("dataSources")}</h2></div>
   <div class="card" style="padding-block:4px">${st.sources.map(s => `<div class="src-row"><b>${s.ok ? "" : "⚠ "}${esc(s.name)}</b><span class="tag">${s.fetched_at ? new Date(s.fetched_at).toLocaleString(loc(), { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : ""}</span><span class="muted" style="grid-column:1/-1">${esc(s.detail)}${s.error ? " · " + esc(s.error) : ""}</span></div>`).join("")}</div>
   <div class="sec-title"><h2>${t("history")}</h2></div><div id="eventsBox"><span class="spinner"></span></div>
+  <div class="sec-title"><h2>${t("remTitle")}</h2></div>
+  <button class="btn ghost" data-act="remSettings">${t("remSettings")}</button>
   <div class="sec-title"><h2>${t("farmKey")}</h2></div>
   <div class="card stack" style="gap:8px"><span class="muted" style="font-size:13px">${t("farmKeyHelp")}</span><div class="keybox" id="keyText">${esc(FARM_KEY)}</div>
     <button class="btn sm ghost" data-act="copyKey">${t("copy")}</button>
     <details><summary class="muted" style="font-size:13px;cursor:pointer">${t("useOtherKey")}</summary><div class="map-search" style="margin-top:8px"><input id="otherKeyIn" autocomplete="off" placeholder="${esc(t("keyPh"))}"><button class="btn sm" data-act="otherKey">${t("open")}</button></div></details></div>
+  <div class="sec-title"><h2>${t("moveFarms")}</h2></div>
+  <div class="card stack" style="gap:8px"><span class="muted" style="font-size:13px">${t("moveFarmsHelp")}</span>
+    <button class="btn sm ghost" data-act="exportFarm">${t("exportFarm")}</button><button class="btn sm ghost" data-act="importFarm">${t("importFarm")}</button></div>
   <div class="sec-title"><h2>${t("aboutTitle")}</h2></div>
   <div class="card about">${aboutHTML()}</div>
   <button class="btn ghost" data-act="tutorial">${t("replay")}</button>
@@ -990,16 +1103,75 @@ function aboutHTML() {
   <p>${L2("Parts of the code and text were written with an AI coding assistant (Claude). The team reviewed and tested the results; no NASA logos or branding were generated.", "كُتبت أجزاء من الكود والنصوص بمساعدة أداة ذكاء اصطناعي للبرمجة (Claude). راجع الفريق النتائج واختبرها؛ ولم يتم توليد أي شعارات أو هوية بصرية لناسا.")}</p>`;
 }
 
+/* ---- reminders ---- */
+async function loadNotify() {
+  try {
+    const n = await api("/notify"); const before = S.notify; S.notify = n;
+    $("#bellCount").textContent = n.unread; $("#bellCount").hidden = !n.unread;
+    const tz = -new Date().getTimezoneOffset(); if (n.prefs.tz_offset_min !== tz) api("/notify/prefs", { method: "PUT", body: { tz_offset_min: tz } }).catch(() => {});
+    if (before && n.notices.length && n.notices[0].id !== before.notices[0]?.id && !n.notices[0].read) {
+      toast(n.notices[0].title);
+      if (window.Notification && Notification.permission === "granted" && !(await pushSub())) { try { new Notification(n.notices[0].title, { body: n.notices[0].body, icon: "/static/icon.svg" }); } catch {} }
+    }
+  } catch {}
+}
+function pushSupported() { return "serviceWorker" in navigator && "PushManager" in window && window.isSecureContext; }
+async function pushSub() { if (!pushSupported()) return null; try { const reg = await navigator.serviceWorker.getRegistration("/"); return reg ? await reg.pushManager.getSubscription() : null; } catch { return null; } }
+function b64ToBytes(b) { const s2 = atob((b + "=".repeat((4 - b.length % 4) % 4)).replace(/-/g, "+").replace(/_/g, "/")); return Uint8Array.from(s2, c => c.charCodeAt(0)); }
+async function enablePush() {
+  if (!pushSupported()) { toast(t("remUnsupported")); return; }
+  const perm = await Notification.requestPermission(); if (perm !== "granted") { toast(t("remDenied")); return; }
+  const reg = await navigator.serviceWorker.register("/sw.js"); await navigator.serviceWorker.ready;
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(S.notify.public_key) });
+  await api("/notify/subscribe", { method: "POST", body: sub.toJSON() });
+}
+async function disablePush() { const sub = await pushSub(); if (sub) { await api("/notify/unsubscribe", { method: "POST", body: { endpoint: sub.endpoint } }).catch(() => {}); await sub.unsubscribe(); } }
+async function noticesSheet() {
+  await loadNotify(); const n = S.notify; if (!n) return;
+  sheet(`<div class="stack"><h2 style="font-size:22px">${t("remTitle")}</h2>
+    ${n.notices.length ? n.notices.map(x => `<div class="notice${x.read ? "" : " unread"}"><b>${esc(x.title)}</b><p>${esc(x.body)}</p><small>${new Date(x.at).toLocaleString(loc(), { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</small></div>`).join("") : `<p class="muted">${t("remNone")}</p>`}
+    <button class="btn block" data-act="remSettings">${t("remSettings")}</button><button class="btn ghost block" data-act="closeSheet">${t("close")}</button></div>`);
+  if (n.unread) { api("/notify/read", { method: "POST" }).then(() => { $("#bellCount").hidden = true; }).catch(() => {}); }
+}
+async function remSettingsSheet() {
+  if (!S.notify) await loadNotify(); const pr = S.notify.prefs, sub = await pushSub(), days = T.weekdays[LANG === "ar" ? 1 : 0];
+  const row = (id, label, time) => `<div class="switch-row"><label for="${id}">${label}</label><div class="sub"><input type="checkbox" id="${id}" ${pr[id] ? "checked" : ""}>${time || ""}</div></div>`;
+  sheet(`<form class="stack" id="remForm"><h2 style="font-size:22px">${t("remSettings")}</h2>
+    <div class="card" style="padding-block:2px">
+      ${row("enabled", t("remOn"))}
+      ${row("same_day", t("remSameDay"), `<span class="muted">${t("remAt")}</span><input type="time" id="same_day_time" value="${pr.same_day_time}">`)}
+      ${row("day_before", t("remDayBefore"), `<span class="muted">${t("remAt")}</span><input type="time" id="day_before_time" value="${pr.day_before_time}">`)}
+      ${row("weekly", t("remWeekly"), `<span class="muted">${t("remEvery")}</span><select id="weekly_day">${days.map((d, i) => `<option value="${i}" ${+pr.weekly_day === i ? "selected" : ""}>${d}</option>`).join("")}</select><input type="time" id="weekly_time" value="${pr.weekly_time}">`)}
+    </div>
+    <button class="btn block" type="submit">${t("save")}</button>
+    <div class="card stack" style="gap:8px"><b>${t("remDevice")}</b><span class="muted" style="font-size:13px">${!pushSupported() ? t("remUnsupported") : sub ? t("remDeviceActive") : t("remDeviceInactive")}</span>
+      ${pushSupported() ? (sub ? `<button type="button" class="btn sm ghost" data-act="pushOff">${t("remDeviceOff")}</button>` : `<button type="button" class="btn sm water" data-act="pushOn">${t("remDeviceOn")}</button>`) : ""}</div>
+    <button type="button" class="btn ghost block" data-act="remTest">${t("remTest")}</button>
+    <button type="button" class="btn ghost block" data-act="closeSheet">${t("close")}</button></form>`);
+  $("#remForm").onsubmit = async e => { e.preventDefault();
+    const body = { enabled: $("#enabled").checked, same_day: $("#same_day").checked, same_day_time: $("#same_day_time").value || "07:00",
+      day_before: $("#day_before").checked, day_before_time: $("#day_before_time").value || "19:00", weekly: $("#weekly").checked,
+      weekly_day: +$("#weekly_day").value, weekly_time: $("#weekly_time").value || "08:00", tz_offset_min: -new Date().getTimezoneOffset() };
+    await guard(async () => { S.notify.prefs = await api("/notify/prefs", { method: "PUT", body }); toast(t("remSaved")); closeSheet(); }); };
+}
+navigator.serviceWorker?.addEventListener?.("message", e => { if (e.data?.type === "open-reminders") noticesSheet(); });
+setInterval(() => { if (!$("#scr-main").hidden && !document.hidden) loadNotify(); }, 5 * 60 * 1000);
+
 /* ---- tutorial ---- */
-const COACH = [["#sidebar .sb-crop", "c1t", "c1b"], ["#farmCanvas", "c2t", "c2b"], ["#toolSickle", "c3t", "c3b"], ["#tabAlerts", "c4t", "c4b"]];
+const COACH = [["#sidebar .sb-crop", "c1t", "c1b"], ["#farmCanvas", "c2t", "c2b"], ["#toolWater", "t_water", "t_waterB"], ["#toolSickle", "c3t", "c3b"],
+  [".tool[data-tool=topo]", "t_topo", "t_topoB"], ["#sidebar .sb-add", "t_add", "t_addB"], ["#bellBtn", "t_bell", "t_bellB"],
+  [".tab[data-tab=plan]", "t_plan", "t_planB"], [".tab[data-tab=spray]", "t_spray", "t_sprayB"], ["#tabAlerts", "t_risks", "t_risksB"], [".tab[data-tab=more]", "t_more", "t_moreB"]];
 function coach(i) {
   closeCoach(); if (i >= COACH.length) { store.set("fs_tut", "1"); return; } if (S.tab !== "farm") switchTab("farm");
   const el = $(COACH[i][0]); if (!el) { coach(i + 1); return; }
+  el.scrollIntoView?.({ block: "nearest" });
+  const big = COACH[i][0] === "#farmCanvas";
   const app = $("#app").getBoundingClientRect(), r = el.getBoundingClientRect(), pad = 6, l = $("#layer");
-  const ring = document.createElement("div"); ring.className = "coach-ring"; Object.assign(ring.style, { left: r.left - app.left - pad + "px", top: r.top - app.top - pad + "px", width: r.width + pad * 2 + "px", height: (i === 1 ? Math.min(r.height, app.height * .5) : r.height) + pad * 2 + "px" });
-  const card = document.createElement("div"); card.className = "coach-card"; const below = r.top - app.top < app.height / 2 && i !== 1;
-  if (i === 1) card.style.bottom = "90px"; else card.style[below ? "top" : "bottom"] = below ? (r.bottom - app.top + 16 + "px") : (app.bottom - r.top + 16) + "px";
-  card.innerHTML = `<h3>${t(COACH[i][1])}</h3><p>${t(COACH[i][2])}</p><div class="row between"><div class="dots">${COACH.map((_, k) => `<i class="${k === i ? "on" : ""}"></i>`).join("")}</div><div class="row"><button class="btn sm ghost" data-act="coachSkip">${t("skip")}</button><button class="btn sm" data-act="coachNext" data-i="${i + 1}">${i === COACH.length - 1 ? t("gotIt") : t("next")}</button></div></div>`;
+  const ring = document.createElement("div"); ring.className = "coach-ring"; Object.assign(ring.style, { left: r.left - app.left - pad + "px", top: r.top - app.top - pad + "px", width: r.width + pad * 2 + "px", height: (big ? Math.min(r.height, app.height * .5) : r.height) + pad * 2 + "px" });
+  const card = document.createElement("div"); card.className = "coach-card"; const below = r.top - app.top < app.height / 2 && !big;
+  if (big) card.style.bottom = "90px"; else card.style[below ? "top" : "bottom"] = below ? (r.bottom - app.top + 16 + "px") : (app.bottom - r.top + 16) + "px";
+  card.innerHTML = `<div class="coach-step">${t("stepOf2", { i: i + 1, n: COACH.length })}</div><h3>${t(COACH[i][1])}</h3><p>${t(COACH[i][2])}</p><div class="row between"><div class="dots">${COACH.map((_, k) => `<i class="${k === i ? "on" : ""}"></i>`).join("")}</div><div class="row">${i ? `<button class="btn sm ghost" data-act="coachNext" data-i="${i - 1}">${t("back")}</button>` : `<button class="btn sm ghost" data-act="coachSkip">${t("skip")}</button>`}<button class="btn sm" data-act="coachNext" data-i="${i + 1}">${i === COACH.length - 1 ? t("gotIt") : t("next")}</button></div></div>`;
   l.append(ring, card);
 }
 function closeCoach() { $$("#layer .coach-ring,#layer .coach-card").forEach(e => e.remove()); }
@@ -1008,11 +1180,11 @@ function closeCoach() { $$("#layer .coach-ring,#layer .coach-card").forEach(e =>
 async function setLang(l) { LANG = l; store.set("fs_lang", l); applyI18n(); if (!$("#scr-onboard").hidden) { renderOnboard(); $("#regionChips").innerHTML = regionChips(); } if (!$("#scr-main").hidden) { renderHUD(); renderSidebar(); refreshHint(); renderTabAgain(); } api("/me", { method: "PATCH", body: { lang: l } }).catch(() => {}); }
 $("#placeForm").addEventListener("submit", e => { e.preventDefault(); searchPlace($("#placeQ").value); });
 document.addEventListener("click", async e => {
-  if (suppressClick) { suppressClick = false; if (e.target.closest("#toolSickle")) return; }
+  if (suppressClick) { suppressClick = false; if (e.target.closest("#toolSickle,#toolWater")) return; }
   const a = e.target.closest("[data-act]"), act = a?.dataset.act;
   const crop = e.target.closest(".sb-crop"); if (crop) { const id = crop.dataset.crop; S.sel = S.sel === id ? null : id; renderSidebar(); refreshHint(); return; }
   const tool = e.target.closest(".tool"); if (tool) { const k = tool.dataset.tool; S.sel = null;
-    if (k === "topo") S.topo = !S.topo; else if (k === "water") waterPlanSheet();
+    if (k === "topo") S.topo = !S.topo;
     renderSidebar(); refreshHint(); return; }
   const tab = e.target.closest(".tab"); if (tab) { switchTab(tab.dataset.tab); return; }
   const pk = e.target.closest("[data-pick]"); if (pk && !e.target.closest("details")) { const id = pk.dataset.pick; OB.picks.has(id) ? OB.picks.delete(id) : OB.picks.add(id); pk.setAttribute("aria-pressed", OB.picks.has(id)); return; }
@@ -1036,6 +1208,14 @@ document.addEventListener("click", async e => {
     case "plantHere": { const tl = tileById(+a.dataset.id); closeSheet(); if (tl) plantSheet(tl, a.dataset.crop); break; }
     case "clearSquare": closeSheet(); await guard(async () => applyState(await api(`/plots/${S.plotId}/clear`, { method: "POST", body: { tile_ids: [+a.dataset.id] } }))); break;
     case "addCropSheet": addCropSheet(); break;
+    case "demo": if ($("#scr-main").hidden) openDemo(); else { busy(true); try { await openDemo(); } finally { busy(false); } } break;
+    case "exportFarm": await guard(exportFarm); break;
+    case "importFarm": $("#importFile").click(); break;
+    case "notices": noticesSheet(); break;
+    case "remSettings": closeSheet(); remSettingsSheet(); break;
+    case "pushOn": await guard(async () => { await enablePush(); await remSettingsSheet(); }); break;
+    case "pushOff": await guard(async () => { await disablePush(); await remSettingsSheet(); }); break;
+    case "remTest": await guard(async () => { await api("/notify/test", { method: "POST" }); toast(t("remSent")); await loadNotify(); }); break;
     case "waterPlan": closeSheet(); waterPlanSheet(); break;
     case "start": startOnboard(); break;
     case "sqAuto": OB.sq = null; schedulePreview(); break;
@@ -1063,7 +1243,7 @@ document.addEventListener("click", async e => {
   }
 });
 addEventListener("resize", () => { if (!$("#scr-main").hidden) sizeFarm(); });
-setInterval(() => { if (!$("#scr-main").hidden && S.tab === "farm" && !document.hidden && !$("#layer .sheet") && !sickle.active) loadPlot().catch(() => {}); }, 10 * 60 * 1000);
+setInterval(() => { if (!$("#scr-main").hidden && S.tab === "farm" && !document.hidden && !$("#layer .sheet") && !sickle.active && !can.active) loadPlot().catch(() => {}); }, 10 * 60 * 1000);
 
 /* read-only hook for automated UI tests: screen position of a square's centre */
 window.FarmStudioTest = { squareCenter(id) { const tl = tileById(id); if (!tl) return null; const r = cv.getBoundingClientRect();

@@ -190,3 +190,49 @@ def test_farm_key_identity():
         assert cl.get("/api/me", headers=h).status_code == 200
         r = cl.post("/api/grid/preview", json={"polygon": geo.square_around(32.0, 35.9, 10_000), "square_w_m": 20, "square_h_m": 20})
         assert r.status_code == 200 and r.json()["squares"] == 25
+
+
+def test_logged_watering_replaces_assumed_plan():
+    tom = CROPS["tomato"]
+    today = dt.date(2026, 7, 1)
+    days = _days(today, 30, 7.0)
+    auto = water.schedule(tom, today - dt.timedelta(days=80), "loam", days, today, 0.12, True)
+    assert auto["water_today"] or auto["events"]
+    # the farmer watered today: no watering due today, soil fuller than if nothing was logged
+    logged = water.schedule(tom, today - dt.timedelta(days=80), "loam", days, today, 0.12, True,
+                            irrigation={today.isoformat(): 40.0})
+    assert logged["watered_today"] and not logged["water_today"]
+    # a farmer who logged a watering 10 days ago and nothing since: the soil is drier than the assumed plan
+    old = water.schedule(tom, today - dt.timedelta(days=80), "loam", days, today, 0.12, True,
+                         irrigation={(today - dt.timedelta(days=10)).isoformat(): 30.0})
+    assert old["depletion_mm"] >= auto["depletion_mm"]
+
+
+def test_webpush_encryption_round_trip_and_vapid():
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric import ec
+    from app import webpush
+    browser = ec.generate_private_key(ec.SECP256R1())
+    p256dh = webpush.b64u(browser.public_key().public_bytes(serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint))
+    auth = webpush.b64u(b"0123456789abcdef")
+    body = webpush.encrypt(b'{"title":"Water today"}', p256dh, auth)
+    assert webpush.decrypt(body, browser, auth) == b'{"title":"Water today"}'
+    pem = webpush.new_vapid_key()
+    h = webpush.vapid_header("https://fcm.googleapis.com/fcm/send/abc", pem, "mailto:team@example.org")
+    assert h.startswith("vapid t=") and webpush.public_key_b64(pem) in h
+    assert len(webpush.unb64u(webpush.public_key_b64(pem))) == 65
+
+
+def test_reminder_text_and_timing():
+    from app import reminders
+    plan = {"status": "enough", "share_pct": 100, "crops": [
+        {"crop": "tomato", "dormant": False, "give_m3": 106, "dates": [{"date": "2026-11-14", "mm": 39, "m3": 105.6}]},
+        {"crop": "olive", "dormant": False, "give_m3": 0, "dates": []}]}
+    today = dt.date(2026, 11, 14)
+    title, body = reminders.build("today", "Field", plan, today, "en")
+    assert "Water today" in title and "Tomatoes: 39 mm" in body
+    assert reminders.build("tomorrow", "Field", plan, today, "en") is None
+    title, body = reminders.build("week", "Field", plan, today, "ar")
+    assert "بندورة" in body and "زيتون" in body
+    now = dt.datetime(2026, 11, 14, 7, 30)
+    assert reminders._due(now, "07:00") and not reminders._due(now, "08:00") and not reminders._due(now, "00:30")

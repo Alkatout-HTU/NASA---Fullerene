@@ -42,11 +42,13 @@ def effective_rain(rain: float, et0: float) -> float:
 
 
 def schedule(crop: Crop, planted_on: dt.date, texture: str, days: list[dict], today: dt.date,
-             start_theta: float | None, irrigated_farm: bool, horizon: int = 7) -> dict:
+             start_theta: float | None, irrigated_farm: bool, horizon: int = 7,
+             irrigation: dict[str, float] | None = None) -> dict:
     """Watering plan for one square for the next `horizon` days.
 
-    The farmer does not log each watering. We assume the plan is followed: whenever root-zone
-    depletion reaches the readily available water (RAW), the square is refilled to field capacity.
+    Waterings the farmer logs (`irrigation`: {"YYYY-MM-DD": mm}) are applied as they happened. Before
+    the first logged watering (and for squares never logged) we assume the plan was followed:
+    whenever root-zone depletion reaches the readily available water (RAW), the square is refilled.
     Past days (Open-Meteo analysis) bring the soil to today's state; forecast days give the dates
     and amounts. A watering is postponed when the next 2 days' effective rain covers at least half of it.
     """
@@ -70,6 +72,9 @@ def schedule(crop: Crop, planted_on: dt.date, texture: str, days: list[dict], to
     today_state = None
     postponed = False
     by_date = {d["date"]: d for d in rows}
+    irrigation = irrigation or {}
+    logged_from = dt.date.fromisoformat(min(irrigation)) if irrigation else None
+    watered_today = irrigation.get(today.isoformat(), 0.0) > 0
     for d in rows:
         day = dt.date.fromisoformat(d["date"])
         if day > end:
@@ -83,11 +88,17 @@ def schedule(crop: Crop, planted_on: dt.date, texture: str, days: list[dict], to
         etc = ks * kc * d["et0"]
         pe = effective_rain(d.get("rain") or 0.0, d["et0"])
         dr = max(0.0, min(taw, dr - pe + etc))
+        logged = irrigation.get(d["date"], 0.0)
+        if logged:
+            dr = max(0.0, dr - logged)
         if day >= today:
             etc_week += kc * d["et0"]
             rain_week += pe
         if day == today:
             today_state = {"dr": dr, "taw": taw, "raw": raw, "kc": kc, "dormant": dormant}
+        farmer_logs = logged_from is not None and logged_from <= day <= today
+        if farmer_logs and (day < today or watered_today):
+            continue  # the farmer's own log decides these days
         if irrigated_farm and not dormant and taw > 0 and dr >= raw:
             ahead = sum(effective_rain((by_date.get((day + dt.timedelta(days=k)).isoformat()) or {}).get("rain") or 0.0,
                                        (by_date.get((day + dt.timedelta(days=k)).isoformat()) or {}).get("et0") or 0.0)
@@ -110,5 +121,6 @@ def schedule(crop: Crop, planted_on: dt.date, texture: str, days: list[dict], to
         "etc_week_mm": round(etc_week, 1), "rain_eff_week_mm": round(rain_week, 1),
         "water_today": bool(events and events[0]["date"] == today.isoformat()),
         "next_date": events[0]["date"] if events else None,
-        "rain_postponed": postponed,
+        "rain_postponed": postponed, "watered_today": watered_today,
+        "last_watered": max(irrigation) if irrigation else None,
     }

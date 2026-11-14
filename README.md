@@ -19,4 +19,6 @@ pip install -r requirements.txt && cp .env.example .env
 uvicorn app.main:app --port 8000
 ```
 
-Then open http://localhost:8000.
+Then open http://localhost:8000 and tap **Open the demo farm** to see a ready-made farm in the
+North Ghor, or **Add my field** to map your own. See `docs/API_KEYS.md` for the optional keys and
+`docs/SUBMISSION.md` for the project submission draft.

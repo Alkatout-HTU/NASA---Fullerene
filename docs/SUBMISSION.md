@@ -41,14 +41,20 @@ The app itself needs no account or registration.
   water, soil, crop rotation, climate trend).
 - Weekly watering plan: the farmer enters the water they have per week; the app shares it between
   crops by need and says on which days to water each crop and how many mm / m³, and how much of
-  the need the weekly water covers.
+  the need the weekly water covers. The farmer logs real waterings by dragging the watering can
+  over the squares (or holding a square), and the plan updates from what was actually done.
+- Reminders: on the watering day, the day before and a weekly plan per crop, at times the farmer
+  picks; shown in the app and sent to the phone as notifications (Web Push), each can be switched off.
+- Demo farm: one tap opens a ready-made farm in the North Ghor with crops at different stages,
+  computed from live data, for demonstrations.
 - Planting calendar and harvest dates from local climate; a sickle harvests ripe squares.
 - Safe-spray windows for the next 3 days (wind, rain, heat, humidity rules from pesticide labels).
 - 7-day frost, heat, heavy-rain and wind warnings, stronger for low-lying squares, with field actions.
 
 **How it works**
-- Backend: Python, FastAPI, SQLAlchemy (SQLite), httpx. Frontend: HTML/CSS/JavaScript, Leaflet map,
-  HTML canvas for the farm view. No accounts: each device keeps a random farm key.
+- Backend: Python, FastAPI, SQLAlchemy (SQLite), httpx, cryptography (Web Push). Frontend:
+  HTML/CSS/JavaScript, Leaflet map, HTML canvas for the farm view, a service worker for
+  notifications. No accounts: each device keeps a random farm key; farms move between servers as files.
 - Crop water use follows FAO-56 (crop coefficient × reference evapotranspiration, root-zone
   water balance per square). Crop climate ranges follow FAO ECOCROP.
 - Crop suitability and the planting calendar are computed from NASA POWER monthly climatology
@@ -58,10 +64,13 @@ The app itself needs no account or registration.
   surface temperature; crop health from MODIS NDVI; satellite soil moisture from SMAP L4.
 
 **Testing and validation**
-- 23 automated tests cover geometry (field areas, rotated grids), the FAO-56 crop curve, reference
+- 26 automated tests cover geometry (field areas, rotated grids), the FAO-56 crop curve, reference
   evapotranspiration for the Jordan Valley (July ≈ 6–9 mm/day), the watering plan (rain postpones
-  watering, dormant vines need none, rain-fed fields get no dates), crop matching in Arabic and
-  English, harvest rules and data parsing.
+  watering, dormant vines need none, rain-fed fields get no dates, logged waterings replace the
+  assumed plan), crop matching in Arabic and English, harvest rules, data parsing, reminder text and
+  timing, and Web Push encryption (a message is encrypted and then decrypted as a phone would).
+- An API sweep exercises all 40 endpoint behaviours, including error cases; a push message was
+  delivered to a test push service and decrypted correctly.
 - End-to-end browser tests on a phone-size screen in English and Arabic.
 - **TODO:** if possible, compare the plan with a local farmer's or extension officer's practice
   and report what you found.
@@ -129,7 +138,8 @@ Technical Feasibility (20%), Relevance (15%), Impact (15%), Sustainability (15%)
 Presentation & Teamwork (15%). Make sure the pitch shows:
 
 - [ ] A clear problem statement tied to the Field Shift challenge (water scarcity and climate shift in Jordan).
-- [ ] A live demo on a phone: draw a field → check crops → weekly watering plan → spray window → risks.
+- [ ] A live demo: open the demo farm → tutorial → drag the watering can / sickle → Plan (calendar and
+      water plan) → Spray → Risks → reminders; then draw a new field and check crops.
 - [ ] Where NASA data drives the results (calendar and crop ratings from NASA POWER, low spots from
       SRTM, satellite layers from SMAP/MODIS/ECOSTRESS) — the More → Data sources list shows it live.
 - [ ] Testing and validation (the automated tests, browser tests) and the limitations above.

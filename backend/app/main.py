@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import worker
+from . import reminders, worker
 from .api import router
 from .config import settings
 from .db import init_db
@@ -28,8 +28,10 @@ FRONTEND = Path(__file__).resolve().parents[2] / "frontend"
 async def lifespan(_app: FastAPI):
     init_db()
     task = asyncio.create_task(worker.loop())
+    rtask = asyncio.create_task(reminders.loop())
     yield
     task.cancel()
+    rtask.cancel()
     await close_client()
 
 
@@ -59,3 +61,8 @@ if FRONTEND.exists():
     @app.get("/", include_in_schema=False)
     def index():
         return FileResponse(FRONTEND / "index.html")
+
+    @app.get("/sw.js", include_in_schema=False)
+    def service_worker():  # must be served from the site root to receive push messages for the whole app
+        return FileResponse(FRONTEND / "sw.js", media_type="application/javascript",
+                            headers={"Service-Worker-Allowed": "/", "Cache-Control": "no-cache"})
